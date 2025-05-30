@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U.S. Civics & Culture Quiz - ABSOLUTE ULTIMATE Edition</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Flag icons CSS (new) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/6.6.6/css/flag-icons.min.css">
+
+    <!-- Site stylesheet -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon (emoji fallback) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇺🇸</text></svg>">
+
+    <style>
+        /* Inline styles from your provided HTML for quiz-specific elements */
+        /* These should ideally be in style.css, but keeping them here as per your initial structure */
+        .fi {
+            font-size: 1.5em;
+            vertical-align: middle;
+            margin-right: calc(var(--spacing-unit, 0.25rem) * 2);
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        .floating-shapes {
+            display: none; /* As per original comment */
+        }
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(244, 247, 250, 0.85); 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000; 
+            color: var(--color-text-body, #333f50); /* Assumes CSS vars are in style.css */
+        }
+        .loading-spinner {
+            border: 5px solid var(--color-bg-alt, #e9edf2); /* Assumes CSS vars */
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border-left-color: var(--color-us-blue, #002868); /* Assumes CSS vars */
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: calc(var(--spacing-unit, 0.25rem) * 4);
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .difficulty-badge {
+            display: inline-block;
+            padding: calc(var(--spacing-unit) * 0.75) calc(var(--spacing-unit) * 2.5);
+            font-size: 0.7rem;
+            font-weight: var(--font-weight-semibold);
+            border-radius: var(--border-radius-pill);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-left: calc(var(--spacing-unit) * 2);
+            vertical-align: middle;
+        }
+        .difficulty-badge.easy {
+            background-color: var(--color-success-bg, rgba(34,139,34,0.07));
+            color: var(--color-success, #228B22);
+            border: 1px solid var(--color-success-border, #1e7b1e);
+        }
+        .difficulty-badge.medium {
+            background-color: var(--color-warning-bg, rgba(255,140,0,0.08));
+            color: var(--color-warning, #FF8C00);
+            border: 1px solid var(--color-warning-border, #cc7000);
+        }
+        .difficulty-badge.hard {
+            background-color: var(--color-error-bg, rgba(191,10,48,0.07));
+            color: var(--color-error, #BF0A30);
+            border: 1px solid var(--color-error-border, #aF092c);
+        }
+        .final-score.pass {
+            color: var(--color-success, #228B22);
+        }
+        .final-score.fail {
+            color: var(--color-error, #BF0A30);
+        }
+        .review-item.review-item-correct::before { background-color: var(--color-success, #228B22); }
+        .review-item.review-item-incorrect::before { background-color: var(--color-error, #BF0A30); }
+        .review-item.review-item-no-answer::before { background-color: var(--color-silver-accent, #adb5bd); }
+
+        .quiz-navigation-controls {
+            display: flex;
+            justify-content: space-between;
+            gap: calc(var(--spacing-unit, 0.25rem) * 3);
+            margin-top: calc(var(--spacing-unit, 0.25rem) * 6);
+            padding-top: calc(var(--spacing-unit, 0.25rem) * 4);
+            border-top: 1px solid var(--color-border-subtle, #e0e6ec);
+        }
+        .quiz-navigation-controls .btn-link {
+            font-size: 0.85rem;
+            padding: calc(var(--spacing-unit, 0.25rem) * 1) calc(var(--spacing-unit, 0.25rem) * 1.5); 
+            color: var(--color-text-secondary, #5a687b);
+            text-transform: none; 
+        }
+        .quiz-navigation-controls .btn-link:hover {
+            color: var(--color-us-red, #BF0A30);
+        }
+
+        /* Ensure card elements for statistics have consistent bottom margin if they don't get it from .quiz-section */
+        #statisticsScreen .card {
+             margin-bottom: calc(var(--spacing-unit, 0.25rem) * 6); /* Or your standard card margin from style.css */
+        }
+        #statisticsScreen .card:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating shapes div, keep as is or implement if desired -->
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="main-wrapper">
+        <header class="site-header">
+            <h1><span class="fi fi-us" aria-label="US Flag"></span> U.S. Civics & Culture Quiz</h1>
+            <p class="subtitle">ABSOLUTE ULTIMATE Edition - Test Your Knowledge!</p>
+        </header>
+
+        <main class="quiz-container" id="quizAppRoot" role="main">
+            <!-- Mode Selector Screen -->
+            <section id="modeSelectorScreen" class="quiz-section" aria-labelledby="modeSelectorHeading">
+                <h2 id="modeSelectorHeading"><span class="icon" aria-hidden="true">🕹️</span> Choose Your Quiz Mode</h2>
+                <p>Select how you'd like to test your knowledge.</p>
+                <div class="mode-selection-buttons">
+                    <button id="startPracticeModeBtn" class="btn btn-primary btn-lg btn-mode">
+                        <span class="icon">🏋️</span> Practice Mode
+                        <small>Get immediate feedback & explanations.</small>
+                    </button>
+                    <button id="startExamModeBtn" class="btn btn-secondary btn-lg btn-mode">
+                        <span class="icon">⏱️</span> Exam Mode
+                        <small>Simulate test conditions (10 official questions, no feedback until end).</small>
+                    </button>
+                </div>
+            </section>
+
+            <!-- State Selector Screen -->
+            <section id="stateSelectorScreen" class="quiz-section" style="display: none;" aria-labelledby="stateSelectorHeading">
+                <h2 id="stateSelectorHeading"><span class="icon" aria-hidden="true">🌍</span> Select Your State</h2>
+                <p>Some questions are specific to your state. Please select your state to personalize the quiz.</p>
+                <label for="stateSelect" class="sr-only">State:</label>
+                <select id="stateSelect" aria-describedby="stateSelectorHeading">
+                    <option value="">-- Select State --</option>
+                    {/* Options will be populated by quiz-app.js */}
+                </select>
+                <button id="confirmStateBtn" class="btn btn-primary" disabled>Confirm State & Proceed</button>
+            </section>
+
+            <!-- Category Selector Screen -->
+            <section id="categorySelector" class="quiz-section" style="display: none;" aria-labelledby="categorySelectorHeading">
+                <h3 id="categorySelectorHeading"><span class="icon" aria-hidden="true">🗂️</span> Choose a Category</h3>
+                <div class="category-selection-grid">
+                    {/* Categories will be populated by quiz-app.js */}
+                </div>
+            </section>
+
+            <!-- Progress Container during Quiz -->
+            <section id="progressContainer" class="quiz-section" style="display: none;" aria-live="polite">
+                <div class="progress-indicator"> 
+                    <h4 id="progressCategoryTitle">Category Name Here</h4>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div class="progress-stats">
+                    <span class="stat-item text-muted">Question: <span id="currentQuestionStat" class="text-bold">0</span>/<span id="totalQuestionsStat" class="text-bold">0</span></span>
+                    <span class="stat-item text-muted">Score: <span id="currentScoreStat" class="text-bold">0</span></span>
+                </div>
+                <div class="quiz-navigation-controls">
+                    <button id="navChangeCategoryBtn" class="btn btn-link">Change Category</button>
+                    <button id="navBackToHomeBtn" class="btn btn-link">Back to Home (Modes)</button>
+                </div>
+            </section>
+
+            <!-- Active Quiz Content -->
+            <section id="quizContentSection" class="quiz-section" style="display: none;" aria-live="polite">
+                
+                <div id="activeQuestionContainer">
+                    {/* Question and options will be injected by quiz-app.js */}
+                </div>
+            </section>
+
+            <!-- Results Screen -->
+            <section id="resultsScreen" class="quiz-section" style="display: none;" aria-labelledby="resultsHeading">
+                <h2 id="resultsHeading" class="text-center">Quiz Completed!</h2>
+                <p class="final-score text-center" id="finalScore">0%</p>
+                <p class="result-message text-center" id="resultMessage">Your feedback message will appear here!</p>
+                
+                <div class="results-details" id="resultsDetailsContainer"> 
+                    {/* Review of answers injected by quiz-app.js */}
+                </div>
+                <div class="controls" style="margin-top: calc(var(--spacing-unit) * 8);">
+                    <button id="restartQuizBtn" class="btn btn-primary">Restart Same Selection</button>
+                    <button id="backToCategoriesResultsBtn" class="btn btn-secondary">Pick New Category</button>
+                    <button id="viewDetailedStatsBtn" class="btn btn-info">View Detailed Stats</button>
+                    <button id="backToHomeResultsBtn" class="btn btn-link">Back to Home (Modes)</button>
+                </div>
+            </section>
+
+            <!-- Statistics Screen -->
+            <section id="statisticsScreen" class="quiz-section" style="display: none;" aria-labelledby="statisticsHeading">
+                <h2 id="statisticsHeading" class="text-center"><span class="icon" aria-hidden="true">📊</span> Detailed Quiz Statistics</h2>
+                
+                <div class="card mb-1">
+                    <div class="card-header">
+                        <h4><span class="icon" aria-hidden="true">🏆</span> Overall Performance</h4>
+                    </div>
+                    <div class="card-body" id="overallStatsContainer">
+                        {/* Content injected by quiz-app.js */}
+                    </div>
+                </div>
+
+                <div class="card mb-1">
+                    <div class="card-header">
+                        <h4><span class="icon" aria-hidden="true">📚</span> Performance by Category</h4>
+                    </div>
+                    <div class="card-body" id="categoryStatsContainer">
+                        {/* Content injected by quiz-app.js */}
+                    </div>
+                </div>
+
+                <div class="card mb-1">
+                    <div class="card-header">
+                        <h4><span class="icon" aria-hidden="true">📶</span> Performance by Difficulty</h4>
+                    </div>
+                    <div class="card-body" id="difficultyStatsContainer">
+                        {/* Content injected by quiz-app.js */}
+                    </div>
+                </div>
+                
+                <div class="card mb-1" id="officialStatsCard" style="display:none;">
+                    <div class="card-header">
+                        <h4><span class="icon" aria-hidden="true">🏛️</span> Performance on Official Questions</h4>
+                    </div>
+                    <div class="card-body" id="officialStatsContainer">
+                        {/* Content injected by quiz-app.js */}
+                    </div>
+                </div>
+
+                <div class="card mb-1" id="timeStatsCard" style="display:none;">
+                    <div class="card-header">
+                        <h4><span class="icon" aria-hidden="true">⏱️</span> Time per Question</h4>
+                    </div>
+                    <div class="card-body" id="timePerQuestionStatsContainer">
+                        {/* Content injected by quiz-app.js */}
+                    </div>
+                </div>
+
+                <div id="incorrectReviewContainer" class="mt-1">
+                     {/* Content injected by quiz-app.js (summary/link to full review) */}
+                </div>
+
+                <div class="controls" style="margin-top: calc(var(--spacing-unit) * 8);">
+                    <button id="backToResultsScreenBtn" class="btn btn-secondary">Back to Results Summary</button>
+                    <button id="homeFromStatsBtn" class="btn btn-primary">Back to Home</button>
+                </div>
+            </section>
+            
+            <!-- Loading Screen Overlay -->
+            <div id="loadingScreen" style="display: none;"> 
+                <div class="loading-spinner"></div>
+                <p>Loading questions...</p>
+            </div>
+
+        </main> 
+    </div> 
+
+    <footer class="site-footer">
+        <p>© <script>document.write(new Date().getFullYear())</script> U.S. Civics & Culture Quiz. All Rights Reserved.</p>
+        <p>Based on Official USCIS Questions Data | Practice for the U.S. Citizenship Test</p>
+    </footer>
+
+    <!-- Scripts for Quiz Functionality -->
+    <script src="questions.js"></script>
+    <script src="quiz-app.js"></script>
+</body>
+</html>
