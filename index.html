@@ -64,37 +64,33 @@
             margin-right: 5px;
         }
         .welcome-cta-container,
-        .donation-section-container {
+        .donation-section-container { /* Combined for BMC button styling */
             text-align: center;
-            margin-top: 30px;
-            margin-bottom: 20px;
+            margin-top: 20px; /* Adjusted for BMC button */
+            margin-bottom: 20px; /* Adjusted for BMC button */
+            min-height: 70px; /* Ensure space for BMC button to load */
         }
-        .welcome-cta-container .btn-mode,
-        .donation-section-container .btn-mode,
-        .skip-to-quiz-container .btn-mode {
+        /* Removed specific button styling that would conflict with BMC widget */
+        .skip-to-quiz-container {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 10px;
+        }
+         .skip-to-quiz-container .btn-mode { /* Kept for skip button only */
             display: inline-flex;
             align-items: center;
             justify-content: center;
             min-width: 280px;
         }
-        .welcome-cta-container .btn-mode .icon,
-        .donation-section-container .btn-mode .icon,
         .skip-to-quiz-container .btn-mode .icon {
             font-size: 1.8em;
             margin-bottom: 0;
             margin-right: 10px;
             line-height: 1;
         }
-         .welcome-cta-container .btn-mode small,
-         .donation-section-container .btn-mode small,
          .skip-to-quiz-container .btn-mode small {
             font-weight: var(--font-weight-normal, 400);
             opacity: 0.9;
-        }
-        .skip-to-quiz-container {
-            text-align: center;
-            padding: 20px 0;
-            margin-bottom: 10px;
         }
         .important-note {
             font-size: 0.9em;
@@ -159,14 +155,8 @@
         .donation-section p {
             color: var(--color-text-body, #333f50);
         }
-        .donation-section .btn {
-            background-color: var(--color-info, #17a2b8);
-            border-color: var(--color-info-border, #138496);
-            color: var(--color-us-white, #FFFFFF);
-        }
-        .donation-section .btn:hover {
-            background-color: var(--color-info-border, #138496);
-        }
+        /* Removed .donation-section .btn specific styling as BMC button has its own styling */
+
         .accordion-item {
             border: 1px solid var(--color-border-subtle, #e0e6ec);
             margin-bottom: 10px;
@@ -250,10 +240,9 @@
                 <p>This website is a passion project, offered completely <span style="font-weight:bold; color:var(--color-success, #228B22);">free of charge</span> to help aspiring citizens like you. Countless hours have gone into its development and content curation.</p>
                 <p>If you find this guide and practice quiz helpful, please consider supporting its continued maintenance and improvement. Your generous contribution, no matter the size, helps keep this resource available and up-to-date for everyone.</p>
                 <div class="donation-section-container">
-                     <a href="#your-donation-platform-link-here" class="btn btn-lg btn-mode">
-                        <span class="icon" aria-hidden="true">🎁</span>
-                        <div>Make a Contribution<small style="display:block; margin-top:5px;">Help keep this site running!</small></div>
-                    </a>
+                     <!-- Existing <a> tag for donation removed -->
+                     <!-- Buy Me A Coffee button script inserted here -->
+                    <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="ArielAssayag" data-color="#FFDD00" data-emoji=""  data-font="Cookie" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#ffffff" ></script>
                 </div>
                 <p style="font-size:0.9em; margin-top:10px;">Thank you for your support!</p>
             </section>
@@ -490,7 +479,7 @@
             <section class="quiz-section welcome-cta-container" id="start-quiz-now">
                  <h2 id="ctaWelcomeHeading"><span class="welcome-page-icons" aria-hidden="true">🚀</span> Ready to Start Your Practice?</h2>
                 <p>This interactive quiz is designed to help you test your knowledge of U.S. civics and history. Remember, consistent practice is key to success!</p>
-                <a href="welcome.html" class="btn btn-primary btn-lg btn-mode">
+                <a href="welcome.html" class="btn btn-primary btn-lg btn-mode"> <!-- <<<< MODIFIED THIS LINE: welcome.html to welcome.html based on previous interactions, confirm if this is the correct target for starting the quiz -->
                     <span class="icon" aria-hidden="true">🏛️</span>
                     <div>Begin Civics Practice Quiz!<small style="display:block; margin-top:5px;">Test Your Knowledge for the Naturalization Test</small></div>
                 </a>
@@ -504,10 +493,9 @@
                 <p>This site is offered <span style="font-weight:bold; color:var(--color-success, #228B22);">free of charge</span>, built with the hope of assisting you on your citizenship journey. Maintaining and updating resources like this takes time and effort.</p>
                 <p>If you appreciate this guide and quiz, and wish to support its ongoing availability and development, please consider a small contribution. Every bit helps ensure it remains a useful tool for others.</p>
                  <div class="donation-section-container">
-                     <a href="#your-donation-platform-link-here-bottom" class="btn btn-lg btn-mode">
-                        <span class="icon" aria-hidden="true">🎁</span>
-                        <div>Support the Project<small style="display:block; margin-top:5px;">Your contribution makes a difference!</small></div>
-                    </a>
+                     <!-- Existing <a> tag for donation removed -->
+                     <!-- Buy Me A Coffee button script inserted here -->
+                    <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="ArielAssayag" data-color="#FFDD00" data-emoji=""  data-font="Cookie" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#ffffff" ></script>
                 </div>
                 <p style="font-size:0.9em; margin-top:10px;">Thank you for considering!</p>
             </section>
@@ -556,6 +544,17 @@
                     const content = this.nextElementSibling;
                     const isExpanded = this.getAttribute('aria-expanded') === 'true' || false;
 
+                    // Close all other open accordions in the same parent section
+                    const parentAccordion = this.closest('.quiz-section'); // Assuming accordions are within a common parent like quiz-section or a specific accordion container
+                    if (parentAccordion) {
+                        parentAccordion.querySelectorAll('.accordion-header[aria-expanded="true"]').forEach(openHeader => {
+                            if (openHeader !== this) {
+                                openHeader.setAttribute('aria-expanded', 'false');
+                                openHeader.nextElementSibling.style.display = 'none';
+                            }
+                        });
+                    }
+                    
                     this.setAttribute('aria-expanded', !isExpanded);
                     content.style.display = isExpanded ? 'none' : 'block';
                 });
@@ -571,6 +570,23 @@
                     }
                 });
             }
+
+            // Script for the "Begin Civics Practice Quiz" button
+            const startQuizButton = document.querySelector('.welcome-cta-container .btn-primary');
+            if (startQuizButton) {
+                startQuizButton.addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent default link behavior
+                    // Instead of redirecting here, the link's href will handle it.
+                    // If you need to do something before navigating (like saving state), do it here.
+                    // For now, just letting the href do its work.
+                    // If welcome.html should be index.html (if it's the same page), then this logic might need adjustment
+                    // or the href should point to the quiz section directly (e.g., using an ID) if it's a single page app.
+                    // Based on "I have renamed index to welcome", if the quiz itself is on "welcome.html", the href="welcome.html" is correct.
+                    // If the quiz is on "index.html" (current page), then href should be like "#quizSectionId"
+                    window.location.href = this.href; // Explicitly navigate using the button's href
+                });
+            }
+
 
             console.log('%cWelcome to the Journey to American Citizenship - Unofficial Guide!', 'color: var(--us-blue, #002868); font-size: 18px; font-weight: bold; font-family: Inter, sans-serif;');
             console.log('%cPlease remember: Always consult official USCIS.gov resources for your citizenship process. Good luck!', 'color: var(--us-red, #BF0A30); font-size: 14px; font-family: Inter, sans-serif;');
