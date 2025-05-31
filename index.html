@@ -3,304 +3,578 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>U.S. Civics & Culture Quiz - ABSOLUTE ULTIMATE Edition</title>
+    <title>Welcome - Journey to American Citizenship</title>
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-
-    <!-- Flag icons CSS (new) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/6.6.6/css/flag-icons.min.css">
-
-    <!-- Site stylesheet -->
     <link rel="stylesheet" href="style.css">
-
-    <!-- Favicon (emoji fallback) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇺🇸</text></svg>">
-
     <style>
-        /* Inline styles from your provided HTML for quiz-specific elements */
-        /* These should ideally be in style.css, but keeping them here as per your initial structure */
-        .fi {
-            font-size: 1.5em;
-            vertical-align: middle;
-            margin-right: calc(var(--spacing-unit, 0.25rem) * 2);
+        html {
+            scroll-behavior: smooth;
         }
-
-        .sr-only {
+        .welcome-page-specific-quote {
+            background-color: var(--color-bg-alt, #e9edf2);
+            border-left: 4px solid var(--color-us-blue, #002868);
+            padding: 15px 20px;
+            margin: 25px 0;
+            font-style: italic;
+            border-radius: var(--border-radius-sm, 0.2rem);
+        }
+        .welcome-page-specific-quote footer {
+            text-align: right;
+            font-style: normal;
+            font-size: 0.9em;
+            margin-top: 10px;
+            color: var(--color-text-secondary, #5a687b);
+        }
+        .welcome-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 15px;
+        }
+        .welcome-list li {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        .welcome-list li::before {
+            content: '★';
+            color: var(--color-us-red, #BF0A30);
             position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border-width: 0;
-        }
-        .floating-shapes {
-            display: none; /* As per original comment */
-        }
-        .loading-screen {
-            position: fixed;
-            top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(244, 247, 250, 0.85); 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            top: 1px;
+            font-size: 1.1em;
+        }
+        .welcome-list strong {
+            color: var(--color-text-body, #333f50);
+        }
+        .welcome-list .tip-text {
+            display: block;
+            font-size: 0.9em;
+            color: var(--color-text-secondary, #5a687b);
+            margin-top: 3px;
+            padding-left: 5px;
+        }
+         .welcome-list .tip-text::before {
+            content: '💡';
+            margin-right: 5px;
+        }
+        .welcome-cta-container,
+        .donation-section-container {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        .welcome-cta-container .btn-mode,
+        .donation-section-container .btn-mode,
+        .skip-to-quiz-container .btn-mode {
+            display: inline-flex;
             align-items: center;
-            z-index: 10000; 
-            color: var(--color-text-body, #333f50); /* Assumes CSS vars are in style.css */
+            justify-content: center;
+            min-width: 280px;
         }
-        .loading-spinner {
-            border: 5px solid var(--color-bg-alt, #e9edf2); /* Assumes CSS vars */
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border-left-color: var(--color-us-blue, #002868); /* Assumes CSS vars */
-            animation: spin 1s ease-in-out infinite;
-            margin-bottom: calc(var(--spacing-unit, 0.25rem) * 4);
+        .welcome-cta-container .btn-mode .icon,
+        .donation-section-container .btn-mode .icon,
+        .skip-to-quiz-container .btn-mode .icon {
+            font-size: 1.8em;
+            margin-bottom: 0;
+            margin-right: 10px;
+            line-height: 1;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+         .welcome-cta-container .btn-mode small,
+         .donation-section-container .btn-mode small,
+         .skip-to-quiz-container .btn-mode small {
+            font-weight: var(--font-weight-normal, 400);
+            opacity: 0.9;
         }
-        .difficulty-badge {
-            display: inline-block;
-            padding: calc(var(--spacing-unit) * 0.75) calc(var(--spacing-unit) * 2.5);
-            font-size: 0.7rem;
-            font-weight: var(--font-weight-semibold);
-            border-radius: var(--border-radius-pill);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-left: calc(var(--spacing-unit) * 2);
-            vertical-align: middle;
+        .skip-to-quiz-container {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 10px;
         }
-        .difficulty-badge.easy {
-            background-color: var(--color-success-bg, rgba(34,139,34,0.07));
-            color: var(--color-success, #228B22);
-            border: 1px solid var(--color-success-border, #1e7b1e);
+        .important-note {
+            font-size: 0.9em;
+            color: var(--color-text-secondary, #5a687b);
+            margin-top: 15px;
         }
-        .difficulty-badge.medium {
-            background-color: var(--color-warning-bg, rgba(255,140,0,0.08));
-            color: var(--color-warning, #FF8C00);
-            border: 1px solid var(--color-warning-border, #cc7000);
-        }
-        .difficulty-badge.hard {
-            background-color: var(--color-error-bg, rgba(191,10,48,0.07));
+        .disclaimer-highlight, .warning-text {
             color: var(--color-error, #BF0A30);
-            border: 1px solid var(--color-error-border, #aF092c);
+            font-weight: var(--font-weight-bold, 700);
         }
-        .final-score.pass {
-            color: var(--color-success, #228B22);
+        .welcome-page-icons {
+            font-size: 1em;
+            margin-right: calc(var(--spacing-unit, 0.25rem) * 2);
+            vertical-align: baseline;
         }
-        .final-score.fail {
-            color: var(--color-error, #BF0A30);
+        .creator-heading-flag {
+            margin-left: 10px;
+            margin-right: 10px;
+            font-size: 0.9em;
+            vertical-align: baseline;
         }
-        .review-item.review-item-correct::before { background-color: var(--color-success, #228B22); }
-        .review-item.review-item-incorrect::before { background-color: var(--color-error, #BF0A30); }
-        .review-item.review-item-no-answer::before { background-color: var(--color-silver-accent, #adb5bd); }
-
-        .quiz-navigation-controls {
+        .animated-eagle-container {
+            position: fixed;
+            top: 20px;
+            left: -160px; /* Increased to ensure it's fully off-screen, adjust based on image width */
+            width: 150px; /* You can adjust this to scale your aigle.png */
+            height: auto;
+            z-index: 999;
+            pointer-events: none;
+            animation: flyAcrossScreen 28s linear infinite;
+            opacity: 0.75; /* Slightly more opaque for a clear PNG */
+        }
+        .flying-eagle-img { /* Changed class name for clarity */
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.25)); /* Enhanced shadow for PNG */
+        }
+        @keyframes flyAcrossScreen {
+            0% { transform: translateX(0) scaleX(1); opacity: 0; }
+            3% { transform: translateX(0) scaleX(1); opacity: 0.75; }
+            48% { transform: translateX(calc(100vw + 160px)) scaleX(1); opacity: 0.75; } /* Adjusted calc for new width */
+            49.9% { opacity: 0; }
+            50% { transform: translateX(calc(100vw + 160px)) scaleX(-1); opacity: 0; }
+            50.1% { opacity: 0; }
+            52% { transform: translateX(calc(100vw + 160px)) scaleX(-1); opacity: 0.75; }
+            97% { transform: translateX(0) scaleX(-1); opacity: 0.75;}
+            100% { transform: translateX(0) scaleX(-1); opacity: 0;}
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animated-eagle-container {
+                animation: none;
+                display: none;
+            }
+        }
+        .donation-section {
+            background-color: var(--color-info-bg, rgba(23, 162, 184, 0.08));
+            border-top: 2px solid var(--color-info-border, #138496);
+            border-bottom: 2px solid var(--color-info-border, #138496);
+            color: var(--color-info, #17a2b8);
+        }
+        .donation-section p {
+            color: var(--color-text-body, #333f50);
+        }
+        .donation-section .btn {
+            background-color: var(--color-info, #17a2b8);
+            border-color: var(--color-info-border, #138496);
+            color: var(--color-us-white, #FFFFFF);
+        }
+        .donation-section .btn:hover {
+            background-color: var(--color-info-border, #138496);
+        }
+        .accordion-item {
+            border: 1px solid var(--color-border-subtle, #e0e6ec);
+            margin-bottom: 10px;
+            border-radius: var(--border-radius-md, 0.375rem);
+            overflow: hidden;
+        }
+        .accordion-header {
+            background-color: var(--color-bg-alt, #e9edf2);
+            color: var(--color-text-primary, #002868);
+            cursor: pointer;
+            padding: 15px 20px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            transition: background-color 0.3s ease;
             display: flex;
             justify-content: space-between;
-            gap: calc(var(--spacing-unit, 0.25rem) * 3);
-            margin-top: calc(var(--spacing-unit, 0.25rem) * 6);
-            padding-top: calc(var(--spacing-unit, 0.25rem) * 4);
+            align-items: center;
+            font-size: 1.1em;
+            font-weight: var(--font-weight-semibold, 600);
+            font-family: var(--font-family-sans-serif, 'Inter', sans-serif);
+        }
+        .accordion-header:hover, .accordion-header:focus {
+            background-color: var(--color-border-subtle, #e0e6ec);
+        }
+        .accordion-header .accordion-title {
+            flex-grow: 1;
+        }
+        .accordion-header .accordion-icon {
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+            margin-left: 15px;
+        }
+        .accordion-header[aria-expanded="true"] .accordion-icon {
+            transform: rotate(45deg);
+        }
+        .accordion-header[aria-expanded="true"] {
+             background-color: var(--color-us-blue-light-bg, rgba(0, 40, 104, 0.07));
+        }
+        .accordion-content {
+            padding: 15px 20px;
+            background-color: var(--color-bg-container, #FFFFFF);
             border-top: 1px solid var(--color-border-subtle, #e0e6ec);
         }
-        .quiz-navigation-controls .btn-link {
-            font-size: 0.85rem;
-            padding: calc(var(--spacing-unit, 0.25rem) * 1) calc(var(--spacing-unit, 0.25rem) * 1.5); 
-            color: var(--color-text-secondary, #5a687b);
-            text-transform: none; 
+        .accordion-content p, .accordion-content ul {
+            margin-bottom: 10px;
         }
-        .quiz-navigation-controls .btn-link:hover {
-            color: var(--color-us-red, #BF0A30);
+        .accordion-content .welcome-list {
+            margin-top: 10px;
         }
-
-        /* Ensure card elements for statistics have consistent bottom margin if they don't get it from .quiz-section */
-        #statisticsScreen .card {
-             margin-bottom: calc(var(--spacing-unit, 0.25rem) * 6); /* Or your standard card margin from style.css */
-        }
-        #statisticsScreen .card:last-child {
-            margin-bottom: 0;
+        .accordion-content .welcome-list li::before {
+            left: 0;
         }
     </style>
 </head>
 <body>
-    <!-- Floating shapes div, keep as is or implement if desired -->
-    <div class="floating-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
+    <div class="animated-eagle-container">
+        <img src="aigle.png" alt="Flying American Eagle with Flag Motif" class="flying-eagle-img">
     </div>
 
     <div class="main-wrapper">
         <header class="site-header">
-            <h1><span class="fi fi-us" aria-label="US Flag"></span> U.S. Civics & Culture Quiz</h1>
-            <p class="subtitle">ABSOLUTE ULTIMATE Edition - Test Your Knowledge!</p>
+            <h1><span class="fi fi-us" aria-label="US Flag"></span> Journey to American Citizenship</h1>
+            <p class="subtitle">Your Unofficial Guide & Practice Hub</p>
         </header>
 
-        <main class="quiz-container" id="quizAppRoot" role="main">
-            <!-- Mode Selector Screen -->
-            <section id="modeSelectorScreen" class="quiz-section" aria-labelledby="modeSelectorHeading">
-                <h2 id="modeSelectorHeading"><span class="icon" aria-hidden="true">🕹️</span> Choose Your Quiz Mode</h2>
-                <p>Select how you'd like to test your knowledge.</p>
-                <div class="mode-selection-buttons">
-                    <button id="startPracticeModeBtn" class="btn btn-primary btn-lg btn-mode">
-                        <span class="icon">🏋️</span> Practice Mode
-                        <small>Get immediate feedback & explanations.</small>
+        <main class="quiz-container" id="welcomePageContainer">
+
+            <section class="quiz-section" id="important-disclaimer">
+                <h2 id="disclaimerHeading"><span class="welcome-page-icons" aria-hidden="true">⚠️</span> Important Legal Disclaimer</h2>
+                <p>This website is an <span class="disclaimer-highlight">UNOFFICIAL</span> educational resource and interactive tool developed by a web development enthusiast. It is <span class="disclaimer-highlight">NOT affiliated with, endorsed by, or sponsored by</span> U.S. Citizenship and Immigration Services (USCIS) or any other U.S. government agency.</p>
+                <p>All information provided on this site, including but not limited to details about the naturalization process, eligibility requirements, and civics test questions, is compiled from publicly available resources and is intended for <span class="disclaimer-highlight">general knowledge, personal study, and practice purposes ONLY.</span></p>
+                <p>This website <span class="disclaimer-highlight">DOES NOT PROVIDE LEGAL ADVICE.</span> The content should not be used as a substitute for advice from a qualified immigration attorney or an accredited representative recognized by the Department of Justice. Immigration laws are complex and subject to change. Your specific circumstances may require personalized legal counsel.</p>
+                <p>While every effort is made to ensure the accuracy of the information presented, no guarantees are made regarding its completeness or correctness. You <span class="disclaimer-highlight">MUST ALWAYS refer to official USCIS.gov materials</span> and consult with appropriate legal professionals for guidance on your specific naturalization journey. Reliance on any information provided by this site is solely at your own risk.</p>
+            </section>
+
+            <section class="quiz-section donation-section" id="support-this-project">
+                <h2 id="donationHeading"><span class="welcome-page-icons" aria-hidden="true">💖</span> Support This Free Resource</h2>
+                <p>This website is a passion project, offered completely <span style="font-weight:bold; color:var(--color-success, #228B22);">free of charge</span> to help aspiring citizens like you. Countless hours have gone into its development and content curation.</p>
+                <p>If you find this guide and practice quiz helpful, please consider supporting its continued maintenance and improvement. Your generous contribution, no matter the size, helps keep this resource available and up-to-date for everyone.</p>
+                <div class="donation-section-container">
+                     <a href="#your-donation-platform-link-here" class="btn btn-lg btn-mode">
+                        <span class="icon" aria-hidden="true">🎁</span>
+                        <div>Make a Contribution<small style="display:block; margin-top:5px;">Help keep this site running!</small></div>
+                    </a>
+                </div>
+                <p style="font-size:0.9em; margin-top:10px;">Thank you for your support!</p>
+            </section>
+
+            <section class="skip-to-quiz-container quiz-section">
+                <h3 style="margin-bottom: 15px; font-size: 1.2em; color: var(--color-text-secondary, #5a687b);">Already familiar? Want to test your knowledge now?</h3>
+                <a href="#start-quiz-now" id="skipToQuizBtn" class="btn btn-secondary btn-lg btn-mode">
+                    <span class="icon" aria-hidden="true">👇</span>
+                     <div>Jump Directly to Practice Quiz<small style="display:block; margin-top:5px;">Bypass informational sections</small></div>
+                </a>
+            </section>
+
+            <section class="quiz-section" id="introduction">
+                <h2 id="welcomeHeading"><span class="welcome-page-icons" aria-hidden="true">🎯</span> Welcome, Future American!</h2>
+                <p>Embarking on the journey to U.S. citizenship is a significant and admirable endeavor, a path many have walked with hope and determination. This website is a personal project, born from a passion for web creation and a desire to build helpful resources. It's designed to assist you in preparing for the U.S. citizenship test through practice and learning, by offering insights into the process and a tool to gauge your understanding.</p>
+                <blockquote class="welcome-page-specific-quote">
+                    <p>"Give me your tired, your poor, Your huddled masses yearning to breathe free..."</p>
+                    <footer>— Emma Lazarus, "The New Colossus" (Inscription on the Statue of Liberty)</footer>
+                </blockquote>
+                <p><strong>Getting Started Tip:</strong> Preparation is key! Begin by thoroughly reviewing the official eligibility requirements for naturalization (Form N-400) on USCIS.gov. Understanding each criterion and gathering necessary documentation early can significantly streamline your application process. Creating a personal checklist and timeline based on official USCIS guidelines can be very helpful in staying organized.</p>
+            </section>
+
+            <section class="quiz-section" id="about-creator">
+                <h2 id="creatorHeading">
+                     <span class="fi fi-fr creator-heading-flag" aria-label="French Flag"></span>
+                     A Note from the Creator
+                     <span class="fi fi-us creator-heading-flag" aria-label="US Flag"></span>
+                </h2>
+                <p>Bonjour! I'm from France and a passionate web developer with a keen interest in technology and creating useful online tools. The American spirit of innovation and opportunity has always been an inspiration. This website is a personal project stemming from this enthusiasm—a way to combine my technical skills with a desire to build an informative platform that might help others.</p>
+                <p>It is crucial to understand that <strong class="disclaimer-highlight">I am NOT an immigration lawyer, an accredited representative, or an official expert on U.S. citizenship procedures.</strong> The information compiled on this site is gathered from publicly available U.S. government resources (primarily USCIS.gov) and is intended for educational and practice purposes only. <span class="warning-text">This content does not, and should not be construed as, legal advice.</span></p>
+                <p>As proficiency in English is a fundamental aspect of the naturalization process and life in America, this guide is presented entirely in English. My sincere hope is that this resource serves as a helpful, unofficial aid in your personal study and preparation for the U.S. citizenship test.</p>
+                <p style="text-align:center; margin-top:15px;"><em>"L'Amérique est le pays où tout est possible!"</em> 🗽</p>
+            </section>
+
+            <section class="quiz-section" id="path-to-citizenship">
+                <h2 id="pathHeading"><span class="welcome-page-icons" aria-hidden="true">🛤️</span> Understanding the Path to U.S. Citizenship: A Deeper Look</h2>
+                <p>Becoming a U.S. citizen is a formal legal process with defined requirements. The following accordions provide a more detailed, yet still simplified, overview of the primary avenues. Click on each title to expand and view details.</p>
+
+                <div class="accordion-item">
+                    <button class="accordion-header" aria-expanded="false" aria-controls="content-birthright">
+                        <span class="accordion-title">1. <span class="welcome-page-icons" aria-hidden="true">🌟</span> Citizenship by Birth or Acquisition/Derivation</span>
+                        <span class="accordion-icon" aria-hidden="true">+</span>
                     </button>
-                    <button id="startExamModeBtn" class="btn btn-secondary btn-lg btn-mode">
-                        <span class="icon">⏱️</span> Exam Mode
-                        <small>Simulate test conditions (10 official questions, no feedback until end).</small>
+                    <div class="accordion-content" id="content-birthright" style="display: none;">
+                        <ul class="welcome-list">
+                            <li><strong>Born in the U.S. (Jus Soli):</strong> The 14th Amendment to the U.S. Constitution grants citizenship to nearly all individuals born on U.S. soil or in certain U.S. territories and possessions.</li>
+                            <li><strong>Born Abroad to U.S. Citizen Parents (Jus Sanguinis - Acquisition/Derivation):</strong>
+                                Children born outside the U.S. may acquire U.S. citizenship at birth if one or both parents are U.S. citizens, provided certain statutory requirements regarding the parent's U.S. residency or physical presence are met *before the child's birth*. These laws have changed over time, so the rules applicable depend on the child's date of birth.
+                                A child might also derive citizenship after birth through their U.S. citizen parent(s) if they meet specific conditions while under 18 and are a lawful permanent resident.
+                                <span class="tip-text">Cases of acquisition or derivation can be complex. If this applies to you, reviewing the specific USCIS policy guidance or consulting an immigration lawyer is highly recommended.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                     <button class="accordion-header" aria-expanded="false" aria-controls="content-naturalization-overview">
+                        <span class="accordion-title">2. <span class="welcome-page-icons" aria-hidden="true">📋</span> Citizenship through Naturalization: Overview & Key Requirements</span>
+                        <span class="accordion-icon" aria-hidden="true">+</span>
                     </button>
-                </div>
-            </section>
-
-            <!-- State Selector Screen -->
-            <section id="stateSelectorScreen" class="quiz-section" style="display: none;" aria-labelledby="stateSelectorHeading">
-                <h2 id="stateSelectorHeading"><span class="icon" aria-hidden="true">🌍</span> Select Your State</h2>
-                <p>Some questions are specific to your state. Please select your state to personalize the quiz.</p>
-                <label for="stateSelect" class="sr-only">State:</label>
-                <select id="stateSelect" aria-describedby="stateSelectorHeading">
-                    <option value="">-- Select State --</option>
-                    {/* Options will be populated by quiz-app.js */}
-                </select>
-                <button id="confirmStateBtn" class="btn btn-primary" disabled>Confirm State & Proceed</button>
-            </section>
-
-            <!-- Category Selector Screen -->
-            <section id="categorySelector" class="quiz-section" style="display: none;" aria-labelledby="categorySelectorHeading">
-                <h3 id="categorySelectorHeading"><span class="icon" aria-hidden="true">🗂️</span> Choose a Category</h3>
-                <div class="category-selection-grid">
-                    {/* Categories will be populated by quiz-app.js */}
-                </div>
-            </section>
-
-            <!-- Progress Container during Quiz -->
-            <section id="progressContainer" class="quiz-section" style="display: none;" aria-live="polite">
-                <div class="progress-indicator"> 
-                    <h4 id="progressCategoryTitle">Category Name Here</h4>
-                    <div class="progress-bar">
-                        <div id="progressFill" class="progress-fill" style="width: 0%;"></div>
+                    <div class="accordion-content" id="content-naturalization-overview" style="display:none;">
+                        <p>This is the most common path for foreign nationals who are lawful permanent residents (LPRs) to voluntarily apply to become a U.S. citizen. Each requirement below is crucial.</p>
+                        <div class="accordion-item">
+                            <button class="accordion-header" aria-expanded="false" aria-controls="content-nat-age"><span class="accordion-title">Age</span><span class="accordion-icon" aria-hidden="true">+</span></button>
+                            <div class="accordion-content" id="content-nat-age" style="display:none;"><p>You must be at least 18 years old at the time of filing Form N-400, Application for Naturalization.</p></div>
+                        </div>
+                        <div class="accordion-item">
+                            <button class="accordion-header" aria-expanded="false" aria-controls="content-nat-lpr"><span class="accordion-title">Lawful Permanent Resident Status</span><span class="accordion-icon" aria-hidden="true">+</span></button>
+                            <div class="accordion-content" id="content-nat-lpr" style="display:none;">
+                                <p>Generally, you must have been an LPR (Green Card holder) for at least five (5) years. This period is reduced to three (3) years if you obtained your LPR status through marriage to a U.S. citizen, have been married to and living with that U.S. citizen spouse for at least three years, and your spouse has been a U.S. citizen for at least three years.</p>
+                                <span class="tip-text">Ensure your Green Card is valid when applying. Maintain copies of all immigration documents.</span>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <button class="accordion-header" aria-expanded="false" aria-controls="content-nat-residence"><span class="accordion-title">Continuous Residence & Physical Presence</span><span class="accordion-icon" aria-hidden="true">+</span></button>
+                            <div class="accordion-content" id="content-nat-residence" style="display:none;">
+                                <p>You must have resided continuously in the U.S. as an LPR for the required 5 or 3-year period immediately before filing your N-400 and up until naturalization. Continuous residence means you have not abandoned your LPR status.</p>
+                                <p>You must have been physically present in the U.S. for at least half of your statutory residence period (e.g., 30 months out of 5 years, or 18 months out of 3 years).</p>
+                                <p>You must also reside within the state or USCIS district with jurisdiction over your place of residence for at least three months prior to filing the N-400.</p>
+                                <span class="tip-text">Absences from the U.S. of more than six months but less than one year may disrupt your continuous residence unless you can prove otherwise. Absences of one year or more *will* generally break continuous residence (exceptions for certain employment abroad exist, requiring Form N-470 approval *before* departure). Keep detailed records of all international travel.</span>
+                            </div>
+                        </div>
+                         <div class="accordion-item">
+                            <button class="accordion-header" aria-expanded="false" aria-controls="content-nat-english"><span class="accordion-title">English Language Proficiency</span><span class="accordion-icon" aria-hidden="true">+</span></button>
+                            <div class="accordion-content" id="content-nat-english" style="display:none;">
+                                <p>You must demonstrate an ability to read, write, and speak basic English. This is tested during the naturalization interview.</p>
+                                <span class="tip-text">Exemptions: If you are age 50 or older and have lived in the U.S. as an LPR for periods totaling at least 20 years (the "50/20" rule), or if you are age 55 or older and have lived as an LPR for at least 15 years (the "55/15" rule), you are exempt from the English requirement but must still take the civics test (potentially in your native language with an interpreter). There's also a medical disability exception (Form N-648).</span>
+                                <span class="tip-text">Practice daily! Use ESL resources, watch American TV/movies with subtitles, and engage in conversations. USCIS provides vocabulary lists for the reading and writing tests.</span>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <button class="accordion-header" aria-expanded="false" aria-controls="content-nat-civics"><span class="accordion-title">Knowledge of U.S. History and Government (Civics)</span><span class="accordion-icon" aria-hidden="true">+</span></button>
+                            <div class="accordion-content" id="content-nat-civics" style="display:none;">
+                                <p>You must pass a civics test covering important aspects of U.S. history and government.</p>
+                                <span class="tip-text">This website's quiz focuses on this! Use it regularly. The official USCIS study materials are invaluable. Understanding the *meaning* behind the answers is more important than just memorization.</span>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <button class="accordion-header" aria-expanded="false" aria-controls="content-nat-gmc"><span class="accordion-title">Good Moral Character (GMC)</span><span class="accordion-icon" aria-hidden="true">+</span></button>
+                            <div class="accordion-content" id="content-nat-gmc" style="display:none;">
+                                <p>You must demonstrate that you have been, and continue to be, a person of good moral character during your statutory period and up until you take the Oath of Allegiance. USCIS reviews your conduct, including criminal history (even if arrests did not lead to conviction or records were sealed/expunged), payment of taxes, child support obligations, and truthfulness in all immigration matters.</p>
+                                <span class="tip-text"><strong class="warning-text">This is a critical and often complex requirement.</strong> Be completely honest on your N-400 and during your interview. Failure to disclose information, even if you think it's minor or old, can lead to denial or even more severe consequences. If you have EVER been arrested, cited, detained, charged, convicted, or placed in an alternative sentencing program, or have other concerns about GMC (e.g., failure to file taxes, non-payment of child support), it is <strong class="warning-text">STRONGLY recommended</strong> to consult with an experienced immigration attorney before filing your N-400.</span>
+                            </div>
+                        </div>
+                         <div class="accordion-item">
+                            <button class="accordion-header" aria-expanded="false" aria-controls="content-nat-constitution"><span class="accordion-title">Attachment to the Principles of the U.S. Constitution</span><span class="accordion-icon" aria-hidden="true">+</span></button>
+                            <div class="accordion-content" id="content-nat-constitution" style="display:none;"><p>You must show that you understand and are willing to support the principles of the U.S. Constitution.</p></div>
+                        </div>
+                        <div class="accordion-item">
+                            <button class="accordion-header" aria-expanded="false" aria-controls="content-nat-oath"><span class="accordion-title">Oath of Allegiance</span><span class="accordion-icon" aria-hidden="true">+</span></button>
+                            <div class="accordion-content" id="content-nat-oath" style="display:none;">
+                                <p>You must be willing to take the Oath of Allegiance. This includes renouncing prior allegiances, supporting and defending the U.S. Constitution and laws, bearing arms on behalf of the U.S. when required by law (or performing noncombatant service or work of national importance under civilian direction if conscientiously opposed).</p>
+                                <span class="tip-text">Read and understand the full Oath of Allegiance before your interview.</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="progress-stats">
-                    <span class="stat-item text-muted">Question: <span id="currentQuestionStat" class="text-bold">0</span>/<span id="totalQuestionsStat" class="text-bold">0</span></span>
-                    <span class="stat-item text-muted">Score: <span id="currentScoreStat" class="text-bold">0</span></span>
-                </div>
-                <div class="quiz-navigation-controls">
-                    <button id="navChangeCategoryBtn" class="btn btn-link">Change Category</button>
-                    <button id="navBackToHomeBtn" class="btn btn-link">Back to Home (Modes)</button>
-                </div>
             </section>
 
-            <!-- Active Quiz Content -->
-            <section id="quizContentSection" class="quiz-section" style="display: none;" aria-live="polite">
+            <section class="quiz-section" id="naturalization-test-info">
+                <h2 id="testInfoHeading"><span class="welcome-page-icons" aria-hidden="true">📝</span> The Naturalization Interview & Test: In-Depth</h2>
+                <p>The naturalization interview with a USCIS officer is a key step where your eligibility is assessed, and your English and civics knowledge are tested. Click each topic for details:</p>
+
+                <div class="accordion-item">
+                    <button class="accordion-header" aria-expanded="false" aria-controls="content-interview-setting">
+                        <span class="accordion-title">The Interview Setting & Process</span>
+                        <span class="accordion-icon" aria-hidden="true">+</span>
+                    </button>
+                    <div class="accordion-content" id="content-interview-setting" style="display: none;">
+                        <p>Typically held at a USCIS field office. You will be placed under oath at the beginning, promising to tell the truth. The officer will review your N-400 application with you, asking questions about your answers and background to verify your eligibility and identity. They may ask for clarification or additional details on certain parts of your application.</p>
+                        <span class="tip-text">Review your N-400 application thoroughly before the interview so you are familiar with all the information you provided. Bring originals (and copies) of all documents you submitted with your application, plus any additional documents requested in your interview notice.</span>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header" aria-expanded="false" aria-controls="content-english-test">
+                        <span class="accordion-title">English Test Components</span>
+                        <span class="accordion-icon" aria-hidden="true">+</span>
+                    </button>
+                    <div class="accordion-content" id="content-english-test" style="display: none;">
+                         <ul class="welcome-list">
+                            <li><strong>Speaking:</strong> Assessed throughout the interview as you respond to the officer’s questions regarding your N-400 application and general eligibility. Clear, understandable basic English is required. The officer needs to understand you, and you need to understand them.</li>
+                            <li><strong>Reading:</strong> You'll typically be given a tablet or paper with three sentences and asked to read one of them aloud correctly, without long, unnatural pauses. The vocabulary is drawn from official USCIS vocabulary lists.</li>
+                            <li><strong>Writing:</strong> The officer will dictate one sentence out of three, and you must write it legibly in English so that the officer can read it. Punctuation and capitalization errors are generally overlooked if the meaning is clear. Again, vocabulary is from official USCIS lists.</li>
+                        </ul>
+                        <span class="tip-text">USCIS.gov provides "Reading Test Vocabulary List" and "Writing Test Vocabulary List." Practice these. Focus on pronunciation for reading and clear handwriting for writing.</span>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header" aria-expanded="false" aria-controls="content-civics-test">
+                        <span class="accordion-title">Civics Test Details</span>
+                        <span class="accordion-icon" aria-hidden="true">+</span>
+                    </button>
+                    <div class="accordion-content" id="content-civics-test" style="display: none;">
+                        <p>Currently, most applicants take the 2008 version of the civics test. You will be asked up to 10 questions from the official list of 100 questions. You must answer at least 6 correctly to pass. The questions are asked orally, and you must answer orally. The officer will stop asking questions once you have correctly answered 6.</p>
+                        <p><em>(Note: Applicants who filed their N-400 on or after Dec 1, 2020, and before March 1, 2021, may have had the option to take the 2020 civics test (128 questions, 12/20 to pass). However, USCIS has reverted to the 2008 version for most applicants).</em></p>
+                        <span class="tip-text">Study all 100 questions from the 2008 version. While you only need 6 correct out of 10, the officer can ask any 10 from the list. Understanding the concepts behind the answers is more beneficial than rote memorization. Some answers are subject to change (like names of elected officials), so ensure your information is current for those questions. This quiz site contains official questions from the 2008 list, usually marked "Official" or by their source ID (e.g., "19-Q1"). <strong class="warning-text">Be aware that this site also includes some supplemental, non-official questions for broader knowledge and practice; these are typically not marked as "Official" and are not part of the actual USCIS test.</strong></span>
+                        <span class="tip-text"><strong>65/20 Rule:</strong> If you are age 65 or older and have been an LPR for at least 20 years at the time of filing your N-400, you are eligible for special considerations. You may study from a specific list of 20 civics questions (these are marked with an asterisk on the official 100 questions list). You will be asked 10 questions from this smaller pool and must answer 6 correctly. You may also take the civics test in the language of your choice if you bring a qualified interpreter.</span>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header" aria-expanded="false" aria-controls="content-interview-tips">
+                        <span class="accordion-title">General Interview Tips</span>
+                        <span class="accordion-icon" aria-hidden="true">+</span>
+                    </button>
+                    <div class="accordion-content" id="content-interview-tips" style="display: none;">
+                        <ul class="welcome-list">
+                            <li><strong>Be Prepared & Punctual:</strong> Arrive at the USCIS office at least 15-30 minutes before your scheduled appointment. Bring your appointment notice, Green Card, state-issued ID, passports, and any other documents requested by USCIS.</li>
+                            <li><strong>Dress Appropriately:</strong> Business casual attire is recommended (e.g., clean slacks/skirt, collared shirt/blouse). Avoid overly casual clothing like shorts, flip-flops, or t-shirts with potentially offensive slogans. This shows respect for the process.</li>
+                            <li><strong>Listen Carefully & Answer Truthfully:</strong> Pay close attention to the officer’s questions. Answer honestly, clearly, and directly. If you don't understand a question, politely ask the officer to repeat it or rephrase it. Don't guess if you don't know an answer, especially concerning your application; it's better to say you don't recall and offer to provide the information later if necessary (though try to be fully prepared). Provide only the information asked for; don't volunteer extra unrequested details.</li>
+                            <li><strong>Stay Calm & Polite:</strong> It's normal to be nervous. Take deep breaths. The officers are generally professional and conducting a required part of the process. Be courteous and respectful at all times.</li>
+                            <li><strong>Review Your Application Thoroughly:</strong> Before the interview, re-read your entire N-400 application and all supporting documents you submitted. Ensure you remember and can explain the information you provided. Be prepared to discuss any changes since you filed (e.g., new address, job, marital status, trips abroad).</li>
+                            <li><strong>Interpreter:</strong> If you qualify for an English language exemption and need an interpreter for the civics test or other parts of the interview, you must bring your own qualified interpreter. Check USCIS guidelines for interpreter requirements.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 style="margin-top:30px;">Core Civics Test Categories (2008 Version):</h3>
+                <ul class="welcome-list">
+                    <li><strong>American Government:</strong> Principles of American Democracy, System of Government, Rights and Responsibilities.</li>
+                    <li><strong>American History:</strong> Colonial Period and Independence, 1800s, Recent American History and Other Important Historical Information.</li>
+                    <li><strong>Integrated Civics:</strong> Geography, Symbols, Holidays.</li>
+                </ul>
+                <blockquote class="welcome-page-specific-quote">
+                     <p>"We hold these truths to be self-evident, that all men are created equal, that they are endowed by their Creator with certain unalienable Rights, that among these are Life, Liberty and the pursuit of Happiness."</p>
+                    <footer>— The Declaration of Independence, 1776</footer>
+                </blockquote>
+            </section>
+
+            <section class="quiz-section" id="american-symbols-values">
+                <h2 id="symbolsHeading"><span class="fi fi-us" style="font-size:0.9em; vertical-align: baseline; margin-right: 8px;"></span> American Symbols & Values: A Deeper Meaning</h2>
+                <p>Understanding American symbols and core values provides insight into the nation's history, identity, ideals, and ongoing journey. Click each topic for details:</p>
                 
-                <div id="activeQuestionContainer">
-                    {/* Question and options will be injected by quiz-app.js */}
-                </div>
-            </section>
-
-            <!-- Results Screen -->
-            <section id="resultsScreen" class="quiz-section" style="display: none;" aria-labelledby="resultsHeading">
-                <h2 id="resultsHeading" class="text-center">Quiz Completed!</h2>
-                <p class="final-score text-center" id="finalScore">0%</p>
-                <p class="result-message text-center" id="resultMessage">Your feedback message will appear here!</p>
-                
-                <div class="results-details" id="resultsDetailsContainer"> 
-                    {/* Review of answers injected by quiz-app.js */}
-                </div>
-                <div class="controls" style="margin-top: calc(var(--spacing-unit) * 8);">
-                    <button id="restartQuizBtn" class="btn btn-primary">Restart Same Selection</button>
-                    <button id="backToCategoriesResultsBtn" class="btn btn-secondary">Pick New Category</button>
-                    <button id="viewDetailedStatsBtn" class="btn btn-info">View Detailed Stats</button>
-                    <button id="backToHomeResultsBtn" class="btn btn-link">Back to Home (Modes)</button>
-                </div>
-            </section>
-
-            <!-- Statistics Screen -->
-            <section id="statisticsScreen" class="quiz-section" style="display: none;" aria-labelledby="statisticsHeading">
-                <h2 id="statisticsHeading" class="text-center"><span class="icon" aria-hidden="true">📊</span> Detailed Quiz Statistics</h2>
-                
-                <div class="card mb-1">
-                    <div class="card-header">
-                        <h4><span class="icon" aria-hidden="true">🏆</span> Overall Performance</h4>
-                    </div>
-                    <div class="card-body" id="overallStatsContainer">
-                        {/* Content injected by quiz-app.js */}
-                    </div>
-                </div>
-
-                <div class="card mb-1">
-                    <div class="card-header">
-                        <h4><span class="icon" aria-hidden="true">📚</span> Performance by Category</h4>
-                    </div>
-                    <div class="card-body" id="categoryStatsContainer">
-                        {/* Content injected by quiz-app.js */}
-                    </div>
-                </div>
-
-                <div class="card mb-1">
-                    <div class="card-header">
-                        <h4><span class="icon" aria-hidden="true">📶</span> Performance by Difficulty</h4>
-                    </div>
-                    <div class="card-body" id="difficultyStatsContainer">
-                        {/* Content injected by quiz-app.js */}
+                <div class="accordion-item">
+                    <button class="accordion-header" aria-expanded="false" aria-controls="content-symbols-key">
+                        <span class="accordion-title">Key National Symbols</span>
+                        <span class="accordion-icon" aria-hidden="true">+</span>
+                    </button>
+                    <div class="accordion-content" id="content-symbols-key" style="display: none;">
+                        <ul class="welcome-list">
+                            <li><strong>The American Flag (Stars and Stripes):</strong> The 13 stripes represent the original thirteen colonies that declared independence from Great Britain. The 50 stars symbolize the 50 current states of the Union. The colors are also symbolic: red for hardiness and valor, white for purity and innocence, and blue for vigilance, perseverance, and justice. The flag is a powerful symbol of national unity, pride, and the sacrifices made for freedom.</li>
+                            <li><strong>The Bald Eagle:</strong> Chosen as the national bird and emblem in 1782, the Bald Eagle represents strength, courage, freedom, and a long life. It is unique to North America and symbolizes the independent spirit of the nation.</li>
+                            <li><strong>The Statue of Liberty ("Liberty Enlightening the World"):</strong> A colossal neoclassical sculpture on Liberty Island in New York Harbor, a gift from the people of France to the United States in 1886. It is a universal symbol of freedom, democracy, opportunity, and a welcoming beacon to immigrants arriving in America. Emma Lazarus's sonnet, "The New Colossus," inscribed on its pedestal, reinforces this message.</li>
+                            <li><strong>The Great Seal of the United States:</strong> Used to authenticate certain documents issued by the U.S. federal government. The obverse (front) features a bald eagle holding an olive branch (symbolizing peace) in one talon and thirteen arrows (symbolizing strength and readiness for war) in the other. Above its head is a glory of thirteen stars representing the original states. The eagle's breast bears a shield with thirteen red and white stripes. The motto "E Pluribus Unum" (Latin for "Out of many, one") appears on a scroll in its beak, signifying the unity of the states. The reverse side includes an unfinished pyramid and the Eye of Providence.</li>
+                            <li><strong>The Liberty Bell:</strong> An iconic symbol of American independence, housed in Philadelphia, Pennsylvania. It is famously known for its distinctive crack and its inscription from Leviticus: "Proclaim LIBERTY Throughout all the Land unto all the Inhabitants Thereof." It was rung to mark important events, including (traditionally) the reading of the Declaration of Independence.</li>
+                            <li><strong>The White House:</strong> The official residence and principal workplace of the President of the United States, located in Washington, D.C. It is a symbol of the American presidency and the executive branch of government.</li>
+                            <li><strong>The U.S. Capitol Building:</strong> Home to the U.S. Congress (the legislative branch), its iconic dome is a symbol of American democracy and representative government.</li>
+                        </ul>
                     </div>
                 </div>
                 
-                <div class="card mb-1" id="officialStatsCard" style="display:none;">
-                    <div class="card-header">
-                        <h4><span class="icon" aria-hidden="true">🏛️</span> Performance on Official Questions</h4>
+                <div class="accordion-item">
+                    <button class="accordion-header" aria-expanded="false" aria-controls="content-values-core">
+                        <span class="accordion-title">Core American Values (often discussed and reflected in U.S. civics and culture)</span>
+                        <span class="accordion-icon" aria-hidden="true">+</span>
+                    </button>
+                    <div class="accordion-content" id="content-values-core" style="display: none;">
+                        <ul class="welcome-list">
+                            <li><strong>Liberty/Freedom:</strong> The ability of individuals to act, speak, think, and worship as they choose without undue government constraint, as long as they do not infringe upon the rights of others. This is enshrined in the Bill of Rights (e.g., freedom of speech, religion, assembly).</li>
+                            <li><strong>Equality:</strong> The principle that all individuals are created equal and possess equal fundamental rights and opportunities. While the practical realization of equality has been an ongoing struggle throughout American history (e.g., civil rights movements), it remains a foundational ideal.</li>
+                            <li><strong>Democracy/Self-Government:</strong> A system of government where supreme power is vested in the people and exercised by them directly or indirectly through a system of representation, typically involving periodically held free and fair elections. It emphasizes citizen participation, accountability of leaders, and the consent of the governed.</li>
+                            <li><strong>Individualism:</strong> A social theory favoring freedom of action for individuals over collective or state control. It often emphasizes personal independence, self-reliance, and the pursuit of individual goals and achievements.</li>
+                            <li><strong>Rule of Law:</strong> The principle that a nation should be governed by laws, not by the arbitrary decisions of individual government officials. It means that everyone, including the government, is subject to and accountable under the law, and laws are applied fairly and consistently. No one is above the law.</li>
+                            <li><strong>Diversity/E Pluribus Unum:</strong> The idea that out of many diverse peoples, races, religions, and origins, one unified nation is formed. This acknowledges America as a nation of immigrants with a rich tapestry of cultures.</li>
+                            <li><strong>Patriotism:</strong> Love for or devotion to one's country. In the U.S. context, this often involves upholding the principles of the Constitution and participating in civic life.</li>
+                            <li><strong>Opportunity/The American Dream:</strong> The belief that anyone, regardless of their background, can achieve success and prosperity through hard work, determination, and initiative.</li>
+                        </ul>
                     </div>
-                    <div class="card-body" id="officialStatsContainer">
-                        {/* Content injected by quiz-app.js */}
-                    </div>
-                </div>
-
-                <div class="card mb-1" id="timeStatsCard" style="display:none;">
-                    <div class="card-header">
-                        <h4><span class="icon" aria-hidden="true">⏱️</span> Time per Question</h4>
-                    </div>
-                    <div class="card-body" id="timePerQuestionStatsContainer">
-                        {/* Content injected by quiz-app.js */}
-                    </div>
-                </div>
-
-                <div id="incorrectReviewContainer" class="mt-1">
-                     {/* Content injected by quiz-app.js (summary/link to full review) */}
-                </div>
-
-                <div class="controls" style="margin-top: calc(var(--spacing-unit) * 8);">
-                    <button id="backToResultsScreenBtn" class="btn btn-secondary">Back to Results Summary</button>
-                    <button id="homeFromStatsBtn" class="btn btn-primary">Back to Home</button>
                 </div>
             </section>
-            
-            <!-- Loading Screen Overlay -->
-            <div id="loadingScreen" style="display: none;"> 
-                <div class="loading-spinner"></div>
-                <p>Loading questions...</p>
-            </div>
 
-        </main> 
-    </div> 
+            <section class="quiz-section welcome-cta-container" id="start-quiz-now">
+                 <h2 id="ctaWelcomeHeading"><span class="welcome-page-icons" aria-hidden="true">🚀</span> Ready to Start Your Practice?</h2>
+                <p>This interactive quiz is designed to help you test your knowledge of U.S. civics and history. Remember, consistent practice is key to success!</p>
+                <a href="welcome.html" class="btn btn-primary btn-lg btn-mode">
+                    <span class="icon" aria-hidden="true">🏛️</span>
+                    <div>Begin Civics Practice Quiz!<small style="display:block; margin-top:5px;">Test Your Knowledge for the Naturalization Test</small></div>
+                </a>
+                <p class="important-note">
+                    <em>This quiz is an unofficial study tool. The questions marked "Official" are based on the USCIS 100 civics questions (2008 version). Other questions are supplemental for broader learning and are not part of the official test. Always consult official USCIS materials for comprehensive test preparation.</em>
+                </p>
+            </section>
 
-    <footer class="site-footer">
-        <p>© <script>document.write(new Date().getFullYear())</script> U.S. Civics & Culture Quiz. All Rights Reserved.</p>
-        <p>Based on Official USCIS Questions Data | Practice for the U.S. Citizenship Test</p>
-    </footer>
+            <section class="quiz-section donation-section" id="support-this-project-bottom">
+                <h2 id="donationHeadingBottom"><span class="welcome-page-icons" aria-hidden="true">💖</span> Found This Resource Helpful?</h2>
+                <p>This site is offered <span style="font-weight:bold; color:var(--color-success, #228B22);">free of charge</span>, built with the hope of assisting you on your citizenship journey. Maintaining and updating resources like this takes time and effort.</p>
+                <p>If you appreciate this guide and quiz, and wish to support its ongoing availability and development, please consider a small contribution. Every bit helps ensure it remains a useful tool for others.</p>
+                 <div class="donation-section-container">
+                     <a href="#your-donation-platform-link-here-bottom" class="btn btn-lg btn-mode">
+                        <span class="icon" aria-hidden="true">🎁</span>
+                        <div>Support the Project<small style="display:block; margin-top:5px;">Your contribution makes a difference!</small></div>
+                    </a>
+                </div>
+                <p style="font-size:0.9em; margin-top:10px;">Thank you for considering!</p>
+            </section>
 
-    <!-- Scripts for Quiz Functionality -->
-    <script src="questions.js"></script>
-    <script src="quiz-app.js"></script>
+            <section class="quiz-section" id="official-resources-info">
+                <h2 id="resourcesHeading"><span class="welcome-page-icons" aria-hidden="true">📚</span> Vital Official Resources & Final Tips</h2>
+                <p>For the most accurate, up-to-date, and comprehensive information for your naturalization process, <span class="disclaimer-highlight">always prioritize official U.S. government sources</span>:</p>
+                <ul class="welcome-list">
+                    <li><strong>USCIS.gov:</strong> The official website of U.S. Citizenship and Immigration Services. This is your <span class="disclaimer-highlight">PRIMARY and MOST IMPORTANT</span> resource. Here you will find:
+                        <ul>
+                            <li>The latest version of Form N-400 (Application for Naturalization) and its instructions.</li>
+                            <li>Official study materials for the English and civics tests, including the list of 100 civics questions (2008 version), "Learn About the United States: Quick Civics Lessons" booklet, flashcards, videos, and audio tools.</li>
+                            <li>Current eligibility requirements, policy updates, and processing times.</li>
+                            <li>Online tools to create an account, file some forms online, and check your case status.</li>
+                        </ul>
+                        <span class="tip-text">Bookmark the "Citizenship Resource Center" and "Study for the Test" sections on USCIS.gov. They are invaluable.</span>
+                    </li>
+                    <li><strong>USA.gov:</strong> The official web portal of the U.S. government. It's a good starting point to find information and services from various government agencies.</li>
+                    <li><strong>Travel.State.gov:</strong> The U.S. Department of State website, primarily for information on U.S. passports, visas for foreign nationals wishing to visit the U.S., and services for U.S. citizens abroad.</li>
+                </ul>
+                <p><strong>Final Important Tip:</strong> The naturalization process is a formal legal process. Be wary of websites or individuals (sometimes called "notarios" or unauthorized immigration consultants) who offer to help with immigration forms for a fee but are not authorized to provide legal advice. Immigration fraud is a serious issue and can have devastating consequences. Seek help <span class="disclaimer-highlight">ONLY</span> from:
+                    <ul class="welcome-list">
+                        <li>A licensed immigration attorney in good standing.</li>
+                        <li>An accredited representative working for an organization recognized by the Department of Justice (DOJ). You can find lists of these on the DOJ website.</li>
+                    </ul>
+                </p>
+                 <p style="margin-top: 20px; text-align: center; font-weight: bold; color: var(--color-us-red, #BF0A30);">
+                    This journey requires diligence and attention to detail. Wishing you the very best of luck as you pursue your American dream!
+                </p>
+            </section>
+
+        </main>
+
+        <footer class="site-footer">
+            <p>© <script>document.write(new Date().getFullYear())</script> Journey to American Citizenship. Unofficial Educational Guide & Practice Tool.</p>
+            <p>This site is a personal project and is not affiliated with, nor endorsed by, USCIS or any U.S. government agency. All content is for informational and practice purposes only and does not constitute legal advice.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const content = this.nextElementSibling;
+                    const isExpanded = this.getAttribute('aria-expanded') === 'true' || false;
+
+                    this.setAttribute('aria-expanded', !isExpanded);
+                    content.style.display = isExpanded ? 'none' : 'block';
+                });
+            });
+
+            const skipButton = document.getElementById('skipToQuizBtn');
+            if (skipButton) {
+                skipButton.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const targetSection = document.getElementById('start-quiz-now');
+                    if (targetSection) {
+                        targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            }
+
+            console.log('%cWelcome to the Journey to American Citizenship - Unofficial Guide!', 'color: var(--us-blue, #002868); font-size: 18px; font-weight: bold; font-family: Inter, sans-serif;');
+            console.log('%cPlease remember: Always consult official USCIS.gov resources for your citizenship process. Good luck!', 'color: var(--us-red, #BF0A30); font-size: 14px; font-family: Inter, sans-serif;');
+        });
+    </script>
 </body>
 </html>
