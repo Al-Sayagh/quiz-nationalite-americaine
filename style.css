@@ -1979,3 +1979,150 @@ input:disabled, textarea:disabled, select:disabled {
     }
     #timeStatsCard { display: block !important; } /* S'assurer que la carte de temps est visible à l'impression si désirée */
 }
+
+/* ==========================================================================
+   11. RESPONSIVENESS & MOBILE ADAPTATIONS (Add this section or integrate)
+   ========================================================================== */
+
+/* --- General Adjustments for Smaller Screens --- */
+@media (max-width: 768px) {
+    .main-wrapper {
+        padding: calc(var(--spacing-unit) * 4) calc(var(--spacing-unit) * 3); /* Reduced padding */
+    }
+
+    .site-header {
+        padding: calc(var(--spacing-unit) * 6) calc(var(--spacing-unit) * 3);
+        margin-bottom: calc(var(--spacing-unit) * 6);
+    }
+    .site-header h1 {
+        font-size: 2rem; /* Smaller H1 for mobile */
+    }
+    .site-header h1 .flag-emoji {
+        font-size: 1.8rem;
+    }
+    .site-header p.subtitle {
+        font-size: 1rem; /* Smaller subtitle */
+    }
+
+    .quiz-section {
+        padding: calc(var(--spacing-unit) * 4); /* Reduced padding for sections */
+        margin-bottom: calc(var(--spacing-unit) * 6);
+    }
+
+    .quiz-section h2,
+    .quiz-section h3 {
+        font-size: 1.5rem; /* Smaller headings in sections */
+        margin-bottom: calc(var(--spacing-unit) * 4);
+    }
+     .quiz-section h2 .icon,
+    .quiz-section h3 .icon {
+        font-size: 1.1em; /* Slightly smaller icons in headings */
+    }
+    
+    .welcome-page-specific-quote {
+        padding: 10px 15px;
+        margin: 20px 0;
+    }
+
+    .accordion-header {
+        font-size: 1em; /* Slightly smaller accordion headers */
+        padding: 12px 15px;
+    }
+    .accordion-content {
+        padding: 12px 15px;
+    }
+
+    .controls {
+        flex-direction: column; /* Stack buttons in .controls on small screens */
+        gap: calc(var(--spacing-unit) * 3);
+    }
+    .controls .btn {
+        width: 100%; /* Make stacked buttons full width */
+    }
+    
+    .skip-to-quiz-container .btn-mode {
+        min-width: auto; /* Allow skip button to be smaller if needed */
+        width: 90%;
+        max-width: 320px; /* Max width for skip button */
+        padding: calc(var(--spacing-unit) * 3) calc(var(--spacing-unit) * 4);
+    }
+     .skip-to-quiz-container .btn-mode .icon{
+        font-size: 1.5em;
+     }
+
+
+    .final-score {
+        font-size: 2.8rem;
+    }
+    .result-message {
+        font-size: 1.1rem;
+    }
+    .review-title {
+        font-size: 1.8rem;
+    }
+    .review-question-text {
+        font-size: 1.1rem;
+    }
+
+    /* Ensure animated eagle doesn't cause issues on very small screens, though current setup should be fine */
+    .animated-eagle-container {
+        width: 100px; /* Smaller eagle on smaller screens */
+        left: -110px; /* Adjust initial position accordingly */
+    }
+     @keyframes flyAcrossScreen { /* Redefine for mobile if needed, or adjust existing values */
+        0% { transform: translateX(0) scaleX(1); opacity: 0; }
+        3% { transform: translateX(0) scaleX(1); opacity: 0.75; }
+        /* Adjust calc for new width, or test if current calc works well enough */
+        48% { transform: translateX(calc(100vw + 110px)) scaleX(1); opacity: 0.75; } 
+        49.9% { opacity: 0; }
+        50% { transform: translateX(calc(100vw + 110px)) scaleX(-1); opacity: 0; }
+        50.1% { opacity: 0; }
+        52% { transform: translateX(calc(100vw + 110px)) scaleX(-1); opacity: 0.75; }
+        97% { transform: translateX(0) scaleX(-1); opacity: 0.75;}
+        100% { transform: translateX(0) scaleX(-1); opacity: 0;}
+    }
+}
+
+@media (max-width: 480px) {
+    .site-header h1 {
+        font-size: 1.75rem;
+    }
+    .site-header p.subtitle {
+        font-size: 0.9rem;
+    }
+    .quiz-section h2,
+    .quiz-section h3 {
+        font-size: 1.3rem;
+    }
+    
+    .question-text { /* from quiz-app screen, if it's part of this welcome/index */
+        font-size: 1.2rem;
+    }
+    .answer-option { /* from quiz-app screen */
+        font-size: 0.9rem;
+        padding: calc(var(--spacing-unit) * 2.5) calc(var(--spacing-unit) * 3);
+        padding-left: calc(var(--spacing-unit) * 8);
+    }
+
+    .category-selection-grid {
+        grid-template-columns: 1fr; /* Stack category cards on very small screens */
+    }
+
+    /* Specific adjustments for the legal disclaimers on very small screens if needed */
+    #important-disclaimer .accordion-header .accordion-title {
+        font-size: 0.9em; /* Make legal accordion titles slightly smaller if too cramped */
+    }
+}
+
+/* Make sure the BuyMeACoffee widget is reasonably sized or doesn't break layout. 
+   Often, the widget itself is responsive. Container might need adjustment if not. */
+.donation-section-container > div[data-name="bmc-button"] {
+    transform: scale(0.9); /* Example: slightly scale down the BMC button if too large */
+    transform-origin: center;
+}
+
+@media (max-width: 768px) {
+    .donation-section-container > div[data-name="bmc-button"] {
+        transform: scale(1); /* Reset scale for mobile or adjust as needed */
+    }
+}
