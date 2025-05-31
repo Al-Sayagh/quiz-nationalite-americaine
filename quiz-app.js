@@ -1,10 +1,13 @@
-// quiz-app.js - Intégration complète du quiz
+// quiz-app.js - Intégration complète du quiz avec questions dynamiques du Congrès
 
 class QuizApp {
     constructor() {
-        this.localStorageKey = 'usCivicsQuizProgress'; // Clé pour localStorage
-        this.allQuestionsData = [];
+        this.localStorageKey = 'usCivicsQuizProgress';
+        this.baseAllQuestionsData = []; // Pour stocker les questions originales de questions.js
+        this.allQuestionsData = [];    // Questions actives (peut inclure celles générées)
         this.stateData = {};
+        this.congressMembersData = []; // Pour les données de congress.js
+
         this.selectedQuestions = [];
         this.currentQuestionIndex = 0;
         this.score = 0;
@@ -19,18 +22,15 @@ class QuizApp {
 
         this.examQuestionCount = 10;
 
-        // Timer related properties
         this.questionTimerInterval = null;
-        this.questionTimeLimit = 30; // Temps par question en secondes (configurable)
+        this.questionTimeLimit = 30;
         this.questionTimeRemaining = 0;
-        this.timeSpentPerQuestion = []; // Tableau pour stocker le temps passé sur chaque question
-
+        this.timeSpentPerQuestion = [];
 
         this.elements = {
             modeSelectorScreen: document.getElementById('modeSelectorScreen'),
             startPracticeModeBtn: document.getElementById('startPracticeModeBtn'),
             startExamModeBtn: document.getElementById('startExamModeBtn'),
-
             stateSelectorScreen: document.getElementById('stateSelectorScreen'),
             categorySelectorScreen: document.getElementById('categorySelector'),
             progressContainer: document.getElementById('progressContainer'),
@@ -50,12 +50,10 @@ class QuizApp {
             resultMessage: document.getElementById('resultMessage'),
             resultsDetailsContainer: document.getElementById('resultsDetailsContainer'),
             restartQuizBtn: document.getElementById('restartQuizBtn'),
-
             navChangeCategoryBtn: document.getElementById('navChangeCategoryBtn'),
             navBackToHomeBtn: document.getElementById('navBackToHomeBtn'),
             backToCategoriesResultsBtn: document.getElementById('backToCategoriesResultsBtn'),
             backToHomeResultsBtn: document.getElementById('backToHomeResultsBtn'),
-
             statisticsScreen: document.getElementById('statisticsScreen'),
             overallStatsContainer: document.getElementById('overallStatsContainer'),
             categoryStatsContainer: document.getElementById('categoryStatsContainer'),
@@ -66,28 +64,25 @@ class QuizApp {
             viewDetailedStatsBtn: document.getElementById('viewDetailedStatsBtn'),
             backToResultsScreenBtn: document.getElementById('backToResultsScreenBtn'),
             homeFromStatsBtn: document.getElementById('homeFromStatsBtn'),
-            timeStatsCard: document.getElementById('timeStatsCard'), 
+            timeStatsCard: document.getElementById('timeStatsCard'),
             timePerQuestionStatsContainer: document.getElementById('timePerQuestionStatsContainer'),
-
             appRoot: document.getElementById('quizAppRoot')
         };
 
         this.init();
     }
 
-    // --- Méthodes pour localStorage ---
     saveQuizState() {
         if (!this.currentMode || this.selectedQuestions.length === 0 || this.currentQuestionIndex >= this.selectedQuestions.length) {
             this.clearSavedQuizState();
             return;
         }
-
         const stateToSave = {
             currentMode: this.currentMode,
             selectedState: this.selectedState,
             selectedCategoryOrFilterKey: this.selectedCategoryOrFilterKey,
             currentQuizTitle: this.currentQuizTitle,
-            selectedQuestions: this.selectedQuestions,
+            selectedQuestions: this.selectedQuestions, // Important : ces questions peuvent inclure celles générées pour l'état
             userAnswers: this.userAnswers,
             correctlyAnsweredFlags: this.correctlyAnsweredFlags,
             currentQuestionIndex: this.currentQuestionIndex,
@@ -122,40 +117,62 @@ class QuizApp {
             console.error("Error clearing saved quiz state:", e);
         }
     }
-
+    
     restoreQuizFromState(savedState) {
         this.currentMode = savedState.currentMode;
         this.selectedState = savedState.selectedState;
         this.selectedCategoryOrFilterKey = savedState.selectedCategoryOrFilterKey;
         this.currentQuizTitle = savedState.currentQuizTitle;
+        
+        // Les selectedQuestions sont restaurées directement depuis l'état sauvegardé.
+        // Cela inclut les questions spécifiques à l'état qui ont été générées lors de cette session.
         this.selectedQuestions = savedState.selectedQuestions;
+        
+        // Il n'est pas nécessaire de régénérer les questions spécifiques à l'état ici,
+        // car elles sont déjà dans `savedState.selectedQuestions`.
+        // Cependant, this.allQuestionsData doit être correctement initialisé pour que d'autres logiques (comme recommencer un quiz) fonctionnent.
+        // Nous reconstruisons allQuestionsData en fonction de l'état sauvegardé.
+        this.allQuestionsData = JSON.parse(JSON.stringify(this.baseAllQuestionsData));
+        if (this.selectedState) {
+            const stateCongressQs = this.generateStateCongressQuestions(this.selectedState);
+            if (stateCongressQs.length > 0) {
+                this.allQuestionsData.push(...stateCongressQs);
+            }
+            // Ajoutez d'autres questions spécifiques à l'état si nécessaire (gouverneur, etc.)
+        }
+
         this.userAnswers = savedState.userAnswers;
         this.correctlyAnsweredFlags = savedState.correctlyAnsweredFlags;
         this.currentQuestionIndex = savedState.currentQuestionIndex;
         this.score = savedState.score;
         this.timeSpentPerQuestion = savedState.timeSpentPerQuestion || new Array(this.selectedQuestions.length).fill(0);
-
+    
         console.log("Quiz state restored from a previous session.");
-
+    
         this.elements.progressCategoryTitle.textContent = this.currentQuizTitle;
         this.elements.totalQuestionsStat.textContent = this.selectedQuestions.length;
-
+    
         this.showScreen(this.elements.progressContainer);
         this.elements.quizContentScreen.style.display = 'block';
         this.displayQuestion();
     }
+    
 
     init() {
         this.showLoading(true, "Initializing Quiz...");
         if (typeof window.quizData !== 'undefined' &&
             typeof window.quizData.allQuestions !== 'undefined' && Array.isArray(window.quizData.allQuestions) &&
-            typeof window.quizData.stateData !== 'undefined') {
+            typeof window.quizData.stateData !== 'undefined' &&
+            typeof window.congressMembers !== 'undefined' && Array.isArray(window.congressMembers)) {
 
-            this.allQuestionsData = JSON.parse(JSON.stringify(window.quizData.allQuestions));
+            this.baseAllQuestionsData = JSON.parse(JSON.stringify(window.quizData.allQuestions));
+            this.allQuestionsData = JSON.parse(JSON.stringify(this.baseAllQuestionsData)); // Copie de travail initiale
             this.stateData = JSON.parse(JSON.stringify(window.quizData.stateData));
+            this.congressMembersData = JSON.parse(JSON.stringify(window.congressMembers));
 
-            console.log("Questions loaded: " + this.allQuestionsData.length);
-            console.log("State data (capitals) loaded.");
+            console.log("Base questions loaded: " + this.baseAllQuestionsData.length);
+            console.log("State data loaded.");
+            console.log("Congress members loaded: " + this.congressMembersData.length);
 
             this.setupEventListeners();
             this.setupStateSelector();
@@ -165,7 +182,7 @@ class QuizApp {
                 savedState.currentQuestionIndex < savedState.selectedQuestions.length) {
                 if (confirm("A previous quiz session was found. Would you like to resume?")) {
                     this.showLoading(true, "Resuming previous quiz...");
-                    this.restoreQuizFromState(savedState);
+                    this.restoreQuizFromState(savedState); // Cette méthode s'assurera que allQuestionsData est correct aussi
                 } else {
                     this.clearSavedQuizState();
                     this.showScreen(this.elements.modeSelectorScreen);
@@ -178,12 +195,280 @@ class QuizApp {
             }
             this.showLoading(false);
         } else {
-            console.error('Quiz data (questions or stateData) is not available or in the wrong format.');
-            this.displayGlobalError('Failed to load quiz data. Please try refreshing the page.');
+            console.error('Essential quiz data (quizData.allQuestions, quizData.stateData, or congressMembers) is not available or in the wrong format.');
+            this.displayGlobalError('Failed to load essential quiz data. Please try refreshing the page.');
             this.showLoading(false);
         }
     }
 
+    setupEventListeners() {
+        this.elements.startPracticeModeBtn?.addEventListener('click', () => {
+            this.currentMode = 'practice';
+            this.showScreen(this.elements.stateSelectorScreen);
+            this.focusElement(this.elements.stateSelectInput);
+        });
+        this.elements.startExamModeBtn?.addEventListener('click', () => {
+            this.currentMode = 'exam';
+            this.showScreen(this.elements.stateSelectorScreen);
+            this.focusElement(this.elements.stateSelectInput);
+        });
+
+        this.elements.stateSelectInput?.addEventListener('change', (e) => {
+            this.selectedState = e.target.value;
+            if (this.elements.confirmStateBtn) this.elements.confirmStateBtn.disabled = !this.selectedState;
+        });
+
+        this.elements.confirmStateBtn?.addEventListener('click', () => {
+            if (!this.selectedState) {
+                alert("Please select a state.");
+                return;
+            }
+            // Réinitialiser allQuestionsData aux questions de base (de questions.js)
+            this.allQuestionsData = JSON.parse(JSON.stringify(this.baseAllQuestionsData));
+
+            // Générer et ajouter les questions spécifiques à l'état (Congrès)
+            const stateCongressQs = this.generateStateCongressQuestions(this.selectedState);
+            if (stateCongressQs.length > 0) {
+                this.allQuestionsData.push(...stateCongressQs);
+                console.log(`Added ${stateCongressQs.length} state-specific congress questions for ${this.selectedState}. Total questions now: ${this.allQuestionsData.length}`);
+            } else {
+                console.log(`No specific congress questions generated for ${this.selectedState}.`);
+            }
+            // Ajoutez ici la génération de question pour le gouverneur si vous l'implémentez.
+
+            this.showScreen(this.elements.categorySelectorScreen);
+            this.displayCategories(); // displayCategories utilisera this.allQuestionsData mis à jour
+            if (this.elements.categoryGrid.querySelector('.category-card')) {
+                this.focusElement(this.elements.categoryGrid.querySelector('.category-card'));
+            }
+        });
+
+        this.elements.restartQuizBtn?.addEventListener('click', () => this.restartQuiz());
+        this.elements.navChangeCategoryBtn?.addEventListener('click', () => this.handleNavChangeCategory());
+        this.elements.navBackToHomeBtn?.addEventListener('click', () => this.handleNavBackToHome());
+        this.elements.backToCategoriesResultsBtn?.addEventListener('click', () => this.handleBackToCategoriesFromResults());
+        this.elements.backToHomeResultsBtn?.addEventListener('click', () => this.handleNavBackToHome());
+        this.elements.viewDetailedStatsBtn?.addEventListener('click', () => this.displayDetailedStatistics());
+        this.elements.backToResultsScreenBtn?.addEventListener('click', () => {
+            this.showScreen(this.elements.resultsScreen);
+            this.focusElement(this.elements.viewDetailedStatsBtn);
+        });
+        this.elements.homeFromStatsBtn?.addEventListener('click', () => this.handleNavBackToHome());
+    }
+    
+    generateStateCongressQuestions(stateName) {
+        const stateSpecificQuestions = [];
+        if (!this.congressMembersData || this.congressMembersData.length === 0) {
+            console.warn("Congress data not available for generating state questions.");
+            return stateSpecificQuestions;
+        }
+
+        const stateSenators = this.congressMembersData.filter(
+            member => member.state === stateName && member.activity === "senator"
+        );
+        const stateRepresentatives = this.congressMembersData.filter(
+            member => member.state === stateName && member.activity === "representative"
+        );
+
+        // Fonction pour obtenir des distracteurs (personnes d'autres états ou avec d'autres rôles)
+        const getDistractors = (correctAnswerName, listToAvoidSameRoleInState = [], count = 3) => {
+            const distractors = [];
+            // Priorité aux personnes d'autres états
+            const otherStateMembers = this.shuffleArray(
+                this.congressMembersData.filter(m => m.state !== stateName && m.name !== correctAnswerName)
+            );
+            
+            for (const member of otherStateMembers) {
+                if (distractors.length >= count) break;
+                if (!distractors.includes(member.name)) {
+                    distractors.push(member.name);
+                }
+            }
+
+            // Si pas assez, compléter avec d'autres rôles dans le même état (sauf si évité)
+            if (distractors.length < count) {
+                 const sameStateOtherRoles = this.shuffleArray(
+                    this.congressMembersData.filter(m => m.state === stateName && m.name !== correctAnswerName && !listToAvoidSameRoleInState.find(s => s.name === m.name) )
+                );
+                for (const member of sameStateOtherRoles) {
+                    if (distractors.length >= count) break;
+                     if (!distractors.includes(member.name)) {
+                        distractors.push(member.name);
+                    }
+                }
+            }
+            
+            // Fallback très simple si on manque toujours
+            const allCongressNames = this.shuffleArray(this.congressMembersData.map(m => m.name));
+            while (distractors.length < count) {
+                const randomName = allCongressNames.find(name => name !== correctAnswerName && !distractors.includes(name));
+                if (randomName) {
+                    distractors.push(randomName);
+                } else {
+                    distractors.push(`Fictitious Official ${distractors.length + 1}`); // Ultime fallback
+                }
+            }
+            return distractors.slice(0, count); // S'assurer qu'on a bien 'count' distracteurs
+        };
+
+        // Questions pour les Sénateurs (une question par sénateur)
+        stateSenators.forEach((senator) => {
+            const correctAnswer = senator.name;
+            // Pour les distracteurs d'un sénateur, éviter l'autre sénateur du même état
+            const otherSenatorFromState = stateSenators.find(s => s.name !== senator.name);
+            const avoidInDistractors = otherSenatorFromState ? [otherSenatorFromState] : [];
+
+            const options = this.shuffleArray([correctAnswer, ...getDistractors(correctAnswer, avoidInDistractors)]);
+            stateSpecificQuestions.push({
+                id: `state-senator-${stateName.replace(/\s+/g, '-')}-${senator.name.replace(/\s+/g, '-')}`, // ID unique
+                sourceId: `gen-sen-${senator.id}`,
+                question: `Who is one of the U.S. Senators from ${stateName}? (Unofficial)`,
+                options: options,
+                correctAnswer: correctAnswer,
+                explanation: `${correctAnswer} (${senator.party}) is a U.S. Senator representing ${stateName}. There are two senators from each state. (Unofficial question based on available data. For official tests, always verify current officials.)`,
+                category: "State Officials (Unofficial)",
+                difficulty: "Medium",
+                isOfficial: false,
+                isStateSpecific: true
+            });
+        });
+
+        // Question pour UN des Représentants (si l'état en a)
+        if (stateRepresentatives.length > 0) {
+            // Choisir un représentant au hasard comme bonne réponse
+            const randomRepresentative = stateRepresentatives[Math.floor(Math.random() * stateRepresentatives.length)];
+            const correctAnswer = randomRepresentative.name;
+             // Pour les distracteurs, éviter les autres représentants du même état pour cette question spécifique
+            const otherRepsFromState = stateRepresentatives.filter(r => r.name !== randomRepresentative.name);
+
+            const options = this.shuffleArray([correctAnswer, ...getDistractors(correctAnswer, otherRepsFromState)]);
+
+            stateSpecificQuestions.push({
+                id: `state-rep-${stateName.replace(/\s+/g, '-')}-${randomRepresentative.name.replace(/\s+/g, '-')}`, // ID unique
+                sourceId: `gen-rep-${randomRepresentative.id}`,
+                question: `Who is one of the U.S. Representatives from ${stateName}? (Unofficial)`,
+                options: options,
+                correctAnswer: correctAnswer,
+                explanation: `U.S. Representatives are elected for 2-year terms from congressional districts. ${correctAnswer} (${randomRepresentative.party}) is one of the representatives for ${stateName}. (Unofficial question based on available data. For official tests, verify your specific representative.)`,
+                category: "State Officials (Unofficial)",
+                difficulty: "Medium",
+                isOfficial: false,
+                isStateSpecific: true
+            });
+        }
+        return stateSpecificQuestions;
+    }
+
+    getUniqueCategories() {
+        // Inclut dynamiquement la catégorie des officiels de l'état si des questions existent
+        const categoriesFromData = [...new Set(this.allQuestionsData.map(q => q.category).filter(Boolean))];
+        // S'assurer que la catégorie des officiels de l'état est là si des questions ont été générées pour elle
+        if (this.allQuestionsData.some(q => q.category === "State Officials (Unofficial)")) {
+            if (!categoriesFromData.includes("State Officials (Unofficial)")) {
+                categoriesFromData.push("State Officials (Unofficial)");
+            }
+        }
+        return categoriesFromData.sort();
+    }
+
+    getCategoryIcon(category) {
+        const icons = {
+            'Principles of American Democracy': '🏛️',
+            'Principles of American Government': '🏛️', // Ajouté car présent dans questions.js
+            'System of Government': '⚖️',
+            'Rights and Responsibilities': '🗳️',
+            'American History: Colonial Period and Independence': '📜',
+            'American History: 1800s': '🎩',
+            'American History: Recent History': '📰',
+            'Integrated Civics: Geography': '🗺️',
+            'Integrated Civics: Symbols': '🇺🇸',
+            'Integrated Civics: Holidays': '🎆',
+            'Science & Technology in U.S.': '🚀',
+            'U.S. Culture & Society': '🎭',
+            'U.S. Arts & Literature': '📚',
+            'State Officials (Unofficial)': '🏘️' // Nouvelle icône pour la catégorie d'officiels d'état
+        };
+        return icons[category] || '📌';
+    }
+
+    // --- Le reste de vos méthodes (showLoading, displayGlobalError, focusElement, setupStateSelector,
+    //      handleNavChangeCategory, handleNavBackToHome, handleBackToCategoriesFromResults, showScreen,
+    //      displayCategories, handleCategorySelection, createCategoryCard, shuffleArray, startQuiz,
+    //      _isCorrectAnswer, processStateSpecificQuestion, startQuestionTimer, stopQuestionTimer,
+    //      updateTimerDisplay, handleTimeUp, displayQuestion, getDifficultyBadge, getAnswerOptionsHTML,
+    //      attachQuestionEventListeners, restoreAnswerState, selectAnswer, updateProgress, previousQuestion,
+    //      nextQuestion, calculateExamScoreAndShowResults, collectDetailedResults, showResults,
+    //      _formatTime, getProgressBarColor, displayDetailedStatistics, restartQuiz)
+    //      devrait en grande partie rester le même que dans la version précédente,
+    //      sauf ajustements mineurs si nécessaire en fonction de la nouvelle logique.
+    //      J'ai intégré les méthodes les plus critiques ci-dessus.
+
+    // ... (Collez ici TOUTES les autres méthodes de la version précédente de quiz-app.js qui ne sont pas déjà redéfinies ci-dessus) ...
+    // Assurez-vous que processStateSpecificQuestion ne traite que le stateInfoType "capital" s'il reste.
+    // Les nouvelles questions sur les membres du congrès ne doivent pas passer par la logique de
+    // génération d'options pour les capitales.
+    processStateSpecificQuestion(questionInstance) {
+        let processedInstance = JSON.parse(JSON.stringify(questionInstance));
+
+        // Logique pour les questions de type 'capital'
+        if (processedInstance.isStateSpecific && this.selectedState && processedInstance.stateInfoType === "capital") {
+            if (processedInstance.question.includes('YOUR STATE')) {
+                processedInstance.question = processedInstance.question.replace(/YOUR STATE/g, this.selectedState);
+            }
+            if ((processedInstance.options[0] === "(Populated by JS)" || processedInstance.correctAnswer === "(Populated by JS)")) {
+                const capital = this.stateData.capitals ? this.stateData.capitals[this.selectedState] : null;
+                if (capital) {
+                    const distractors = [
+                        this.selectedState + " City", "Town of " + this.selectedState,
+                        "Old " + this.selectedState + " Village", "New " + this.selectedState,
+                        "Central " + this.selectedState, "Metro " + this.selectedState,
+                        "Springfield", "Columbus", "Albany", "Sacramento"
+                    ].filter(d => d.toLowerCase() !== capital.toLowerCase() && !d.startsWith(this.selectedState));
+
+                    let finalOptionsSet = new Set([capital]);
+                    let shuffledDistractors = this.shuffleArray(distractors);
+
+                    for (let i = 0; finalOptionsSet.size < 4 && i < shuffledDistractors.length; ++i) {
+                        if (!Array.from(finalOptionsSet).map(o => o.toLowerCase()).includes(shuffledDistractors[i].toLowerCase())) {
+                            finalOptionsSet.add(shuffledDistractors[i]);
+                        }
+                    }
+                    let fallbackCounter = 0;
+                    const allCapitals = Object.values(this.stateData.capitals || {});
+                    while (finalOptionsSet.size < 4 && fallbackCounter < allCapitals.length) {
+                        const randomCapital = allCapitals[Math.floor(Math.random() * allCapitals.length)];
+                        if (randomCapital.toLowerCase() !== capital.toLowerCase() && !Array.from(finalOptionsSet).map(o => o.toLowerCase()).includes(randomCapital.toLowerCase())) {
+                            finalOptionsSet.add(randomCapital);
+                        }
+                        fallbackCounter++;
+                    }
+                    if (finalOptionsSet.size < 4) {
+                        const placeholders = ["City Example A", "City Example B", "City Example C", "City Example D"];
+                        let phIndex = 0;
+                        while (finalOptionsSet.size < 4) {
+                            if (!Array.from(finalOptionsSet).map(o => o.toLowerCase()).includes(placeholders[phIndex].toLowerCase())) {
+                                finalOptionsSet.add(placeholders[phIndex]);
+                            }
+                            phIndex = (phIndex + 1) % placeholders.length;
+                        }
+                    }
+                    processedInstance.options = this.shuffleArray(Array.from(finalOptionsSet));
+                    processedInstance.correctAnswer = capital;
+                } else {
+                    processedInstance.options = ["Capital data not found.", "Option B", "Option C", "Option D"];
+                    processedInstance.correctAnswer = "Capital data not found.";
+                }
+            }
+        } 
+        // Ne pas traiter les questions 'senator' ou 'representative' ici pour la génération d'options,
+        // car elles sont déjà générées avec leurs options dans generateStateCongressQuestions.
+        // S'assurer juste que le nom de l'état est bien remplacé dans le texte de la question si 'YOUR STATE' est présent.
+        else if (processedInstance.isStateSpecific && this.selectedState && processedInstance.question.includes('YOUR STATE')) {
+            processedInstance.question = processedInstance.question.replace(/YOUR STATE/g, this.selectedState);
+        }
+        
+        return processedInstance;
+    }
     showLoading(show, message = "Loading questions...") {
         if (!this.elements.loadingScreen) return;
         const pElement = this.elements.loadingScreen.querySelector('p');
@@ -239,47 +524,7 @@ class QuizApp {
             console.error("#stateSelect element not found during setupStateSelector");
         }
     }
-
-    setupEventListeners() {
-        this.elements.startPracticeModeBtn?.addEventListener('click', () => {
-            this.currentMode = 'practice';
-            this.showScreen(this.elements.stateSelectorScreen);
-            this.focusElement(this.elements.stateSelectInput);
-        });
-        this.elements.startExamModeBtn?.addEventListener('click', () => {
-            this.currentMode = 'exam';
-            this.showScreen(this.elements.stateSelectorScreen);
-            this.focusElement(this.elements.stateSelectInput);
-        });
-
-        this.elements.stateSelectInput?.addEventListener('change', (e) => {
-            this.selectedState = e.target.value;
-            if (this.elements.confirmStateBtn) this.elements.confirmStateBtn.disabled = !this.selectedState;
-        });
-
-        this.elements.confirmStateBtn?.addEventListener('click', () => {
-            this.showScreen(this.elements.categorySelectorScreen);
-            this.displayCategories();
-            if (this.elements.categoryGrid.querySelector('.category-card')) {
-                this.focusElement(this.elements.categoryGrid.querySelector('.category-card'));
-            }
-        });
-
-        this.elements.restartQuizBtn?.addEventListener('click', () => this.restartQuiz());
-
-        this.elements.navChangeCategoryBtn?.addEventListener('click', () => this.handleNavChangeCategory());
-        this.elements.navBackToHomeBtn?.addEventListener('click', () => this.handleNavBackToHome());
-        this.elements.backToCategoriesResultsBtn?.addEventListener('click', () => this.handleBackToCategoriesFromResults());
-        this.elements.backToHomeResultsBtn?.addEventListener('click', () => this.handleNavBackToHome());
-
-        this.elements.viewDetailedStatsBtn?.addEventListener('click', () => this.displayDetailedStatistics());
-        this.elements.backToResultsScreenBtn?.addEventListener('click', () => {
-            this.showScreen(this.elements.resultsScreen);
-            this.focusElement(this.elements.viewDetailedStatsBtn);
-        });
-        this.elements.homeFromStatsBtn?.addEventListener('click', () => this.handleNavBackToHome());
-    }
-
+    
     handleNavChangeCategory() {
         const quizInProgress = this.selectedQuestions.length > 0 && this.currentQuestionIndex < this.selectedQuestions.length && this.userAnswers.some(ans => ans !== null);
         if (quizInProgress) {
@@ -289,7 +534,7 @@ class QuizApp {
         }
         this.clearSavedQuizState();
         this.showScreen(this.elements.categorySelectorScreen);
-        this.displayCategories();
+        this.displayCategories(); // Assurez-vous que allQuestionsData est correct avant cet appel
         if (this.elements.categoryGrid.querySelector('.category-card')) {
             this.focusElement(this.elements.categoryGrid.querySelector('.category-card'));
         }
@@ -313,6 +558,7 @@ class QuizApp {
         this.currentQuestionIndex = 0;
         this.detailedQuizResults = [];
         this.timeSpentPerQuestion = [];
+        this.allQuestionsData = JSON.parse(JSON.stringify(this.baseAllQuestionsData)); // Réinitialiser aux questions de base
 
         if (this.elements.stateSelectInput) this.elements.stateSelectInput.value = '';
         if (this.elements.confirmStateBtn) this.elements.confirmStateBtn.disabled = true;
@@ -323,6 +569,7 @@ class QuizApp {
 
     handleBackToCategoriesFromResults() {
         this.showScreen(this.elements.categorySelectorScreen);
+        // allQuestionsData devrait déjà être correctement défini (avec les questions d'état si un état a été sélectionné)
         this.displayCategories();
         if (this.elements.resultsDetailsContainer) this.elements.resultsDetailsContainer.innerHTML = '';
         if (this.elements.categoryGrid.querySelector('.category-card')) {
@@ -349,34 +596,44 @@ class QuizApp {
             });
         }
     }
-
+    
     displayCategories() {
-        const categories = this.getUniqueCategories();
+        const categories = this.getUniqueCategories(); // S'assure que cela inclut la nouvelle catégorie si elle a des questions
         this.elements.categoryGrid.innerHTML = '';
         const categorySelectorHeading = document.getElementById('categorySelectorHeading');
         if (categorySelectorHeading) {
-            let modeText = '';
-            if (this.currentMode === 'exam') modeText = ' (Exam Mode - ' + this.examQuestionCount + ' Qs)';
-            else if (this.currentMode === 'practice') modeText = ' (Practice Mode)';
+            let modeText = this.currentMode === 'exam' ? ` (Exam Mode - ${this.examQuestionCount} Qs)` : ' (Practice Mode)';
             categorySelectorHeading.innerHTML = `<span class="icon" aria-hidden="true">🗂️</span> Choose Category ${modeText}`;
         }
 
-        const mixedCard = this.createCategoryCard('Mixed Questions' + (this.currentMode === 'exam' ? ' (Exam)' : ''),
-            this.currentMode === 'exam' ? 'Official questions' : this.allQuestionsData.length + ' questions',
-            '🎲');
+        // Carte pour "Mixed Questions"
+        let mixedQuestionsPool = this.allQuestionsData;
+        let mixedCardSubtext = `${mixedQuestionsPool.length} questions`;
+        if (this.currentMode === 'exam') {
+            mixedQuestionsPool = this.allQuestionsData.filter(q => q.isOfficial);
+            mixedCardSubtext = mixedQuestionsPool.length > 0 ? (mixedQuestionsPool.length < this.examQuestionCount ? `Official questions (${mixedQuestionsPool.length} Qs exam)` : `Official questions (${this.examQuestionCount} Qs exam)`) : "No official questions";
+        }
+        const mixedCard = this.createCategoryCard('Mixed Questions' + (this.currentMode === 'exam' ? ' (Exam)' : ''), mixedCardSubtext, '🎲');
+        mixedCard.disabled = (this.currentMode === 'exam' && mixedQuestionsPool.length === 0);
         mixedCard.addEventListener('click', () => this.handleCategorySelection('all', 'Mixed Questions'));
         this.elements.categoryGrid.appendChild(mixedCard);
-
+        
+        // Cartes pour chaque catégorie
         categories.forEach(category => {
             const questionsInCategory = this.allQuestionsData.filter(q => q.category === category);
-            const officialCountInCategory = questionsInCategory.filter(q => q.isOfficial).length;
+            let officialCountInCategory = questionsInCategory.filter(q => q.isOfficial).length;
+            
+            // Pour la catégorie spécifique à l'état, toutes ses questions sont non officielles par défaut
+            if (category === "State Officials (Unofficial)") {
+                 officialCountInCategory = 0; 
+            }
 
-            let countForDisplay = questionsInCategory.length + ' questions';
+            let countForDisplay = `${questionsInCategory.length} questions`;
             let cardDisabled = false;
             let cardTitleAttr = '';
 
             if (this.currentMode === 'exam') {
-                countForDisplay = officialCountInCategory + ' official';
+                countForDisplay = `${officialCountInCategory} official`;
                 if (officialCountInCategory === 0) {
                     cardDisabled = true;
                     cardTitleAttr = "No official questions in this category for an exam.";
@@ -386,6 +643,13 @@ class QuizApp {
                     countForDisplay += ` (${this.examQuestionCount} Qs exam)`;
                 }
             }
+             // Désactiver la catégorie "State Officials" en mode examen
+            if (this.currentMode === 'exam' && category === "State Officials (Unofficial)") {
+                cardDisabled = true;
+                cardTitleAttr = "State official questions are not available in Exam Mode.";
+                countForDisplay = "Practice Mode only";
+            }
+
 
             const icon = this.getCategoryIcon(category);
             const card = this.createCategoryCard(category + (this.currentMode === 'exam' ? ' (Exam)' : ''), countForDisplay, icon);
@@ -429,7 +693,7 @@ class QuizApp {
 
         let baseQuestions;
         if (key === 'all') {
-            baseQuestions = JSON.parse(JSON.stringify(this.allQuestionsData));
+            baseQuestions = JSON.parse(JSON.stringify(this.allQuestionsData)); // Utilise le allQuestionsData actuel (avec les questions d'état)
         } else if (filterFn) {
             baseQuestions = JSON.parse(JSON.stringify(this.allQuestionsData.filter(filterFn)));
         } else {
@@ -437,6 +701,7 @@ class QuizApp {
         }
 
         if (this.currentMode === 'exam') {
+            // En mode examen, ne prendre que les questions officielles
             this.selectedQuestions = baseQuestions.filter(q => q.isOfficial === true);
             this.selectedQuestions = this.shuffleArray(this.selectedQuestions);
             if (this.selectedQuestions.length === 0) {
@@ -447,7 +712,7 @@ class QuizApp {
             }
             this.selectedQuestions = this.selectedQuestions.slice(0, Math.min(this.selectedQuestions.length, this.examQuestionCount));
 
-            if (this.selectedQuestions.length === 0) {
+            if (this.selectedQuestions.length === 0) { // Vérification redondante mais sûre
                 alert("An error occurred selecting questions for the exam. Please try again.");
                 this.displayCategories();
                 this.focusElement(this.elements.categoryGrid.querySelector('.category-card:not(:disabled)'));
@@ -456,18 +721,16 @@ class QuizApp {
             if (this.selectedQuestions.length < this.examQuestionCount && this.selectedQuestions.length > 0) {
                 console.warn(`Exam for "${titleForDisplay}" will have only ${this.selectedQuestions.length} questions due to availability.`);
             }
-
         } else { // Practice Mode
             this.selectedQuestions = this.shuffleArray(baseQuestions);
-            if (key !== 'all' && this.selectedQuestions.length > 20) {
-                this.selectedQuestions = this.selectedQuestions.slice(0, 20);
-            } else if (key === 'all' && this.selectedQuestions.length > 50) {
-                this.selectedQuestions = this.selectedQuestions.slice(0, 50);
+            const maxPracticeQuestions = key === 'all' ? 50 : (key === "State Officials (Unofficial)" ? questionsInCategory.length : 20);
+             if (this.selectedQuestions.length > maxPracticeQuestions) {
+                this.selectedQuestions = this.selectedQuestions.slice(0, maxPracticeQuestions);
             }
         }
         this.startQuiz();
     }
-
+    
     createCategoryCard(title, countText, icon) {
         const card = document.createElement('button');
         card.className = 'category-card';
@@ -478,29 +741,6 @@ class QuizApp {
         return card;
     }
 
-    getCategoryIcon(category) {
-        const icons = {
-            'Principles of American Democracy': '🏛️',
-            'Principles of American Government': '🏛️',
-            'System of Government': '⚖️',
-            'Rights and Responsibilities': '🗳️',
-            'American History: Colonial Period and Independence': '📜',
-            'American History: 1800s': '🎩',
-            'American History: Recent History': '📰',
-            'Integrated Civics: Geography': '🗺️',
-            'Integrated Civics: Symbols': '🇺🇸',
-            'Integrated Civics: Holidays': '🎆',
-            'Science & Technology in U.S.': '🚀',
-            'U.S. Culture & Society': '🎭',
-            'U.S. Arts & Literature': '📚'
-        };
-        return icons[category] || '📌';
-    }
-
-    getUniqueCategories() {
-        return [...new Set(this.allQuestionsData.map(q => q.category).filter(Boolean))].sort();
-    }
-
     shuffleArray(array) {
         const newArray = [...array];
         for (let i = newArray.length - 1; i > 0; i--) {
@@ -509,7 +749,7 @@ class QuizApp {
         }
         return newArray;
     }
-
+    
     startQuiz() {
         this.showLoading(true, "Preparing " + this.currentQuizTitle + " quiz...");
         this.currentQuestionIndex = 0;
@@ -543,10 +783,10 @@ class QuizApp {
         }
 
         this.displayQuestion();
-        this.saveQuizState();
+        this.saveQuizState(); // Sauvegarder l'état initial du quiz
         this.showLoading(false);
     }
-
+    
     _isCorrectAnswer(selectedOptionText, correctAnswerData) {
         if (selectedOptionText === null || selectedOptionText === undefined) return false;
         
@@ -562,83 +802,30 @@ class QuizApp {
             if (normalizedSelectedOptionText === normalizedCorrectAnswerDataString) {
                 return true;
             }
-            const orPattern = /\s*\(or\s*(.*?)\)\s*$/;
+            // Gérer les alternatives comme "Answer A (or Answer B, or Answer C)"
+            const orPattern = /\s*\(or\s*(.*?)\)\s*$/; // Capturer le contenu entre (or ...)
             const mainAnswerPart = correctAnswerData.replace(orPattern, '').trim();
             let possibleAnswers = [normalize(mainAnswerPart)];
             const match = correctAnswerData.match(orPattern);
-            if (match && match[1]) {
-                match[1].split(/\s*,\s*or\s*|\s*,\s*|\s+or\s+/)
+
+            if (match && match[1]) { // Si une correspondance (or ...) est trouvée
+                 // Séparer par ", or " ou juste "," ou " or " (espaces flexibles)
+                match[1].split(/\s*,\s*or\s*|\s*,\s*|\s+or\s+/) 
                      .forEach(alt => {
                          const normalizedAlt = normalize(alt.trim());
-                         if (normalizedAlt) {
+                         if (normalizedAlt) { // S'assurer que l'alternative n'est pas vide après trim/normalize
                              possibleAnswers.push(normalizedAlt);
                          }
                      });
             }
-            possibleAnswers = [...new Set(possibleAnswers.filter(Boolean))];
+            // Éliminer les doublons potentiels et les chaînes vides après normalisation
+            possibleAnswers = [...new Set(possibleAnswers.filter(Boolean))]; 
             return possibleAnswers.some(pa => pa === normalizedSelectedOptionText);
         }
+        // Fallback pour d'autres types de données (booléens, nombres convertis en chaînes)
         return normalize(correctAnswerData) === normalizedSelectedOptionText;
     }
 
-
-    processStateSpecificQuestion(questionInstance) {
-        let processedInstance = JSON.parse(JSON.stringify(questionInstance));
-
-        if (processedInstance.isStateSpecific && this.selectedState) {
-            if (processedInstance.question.includes('YOUR STATE')) {
-                processedInstance.question = processedInstance.question.replace(/YOUR STATE/g, this.selectedState);
-            }
-            if (processedInstance.stateInfoType === "capital" &&
-                (processedInstance.options[0] === "(Populated by JS)" || processedInstance.correctAnswer === "(Populated by JS)")) {
-                const capital = this.stateData.capitals ? this.stateData.capitals[this.selectedState] : null;
-                if (capital) {
-                    const distractors = [
-                        this.selectedState + " City", "Town of " + this.selectedState,
-                        "Old " + this.selectedState + " Village", "New " + this.selectedState,
-                        "Central " + this.selectedState, "Metro " + this.selectedState,
-                        "Springfield", "Columbus", "Albany", "Sacramento"
-                    ].filter(d => d.toLowerCase() !== capital.toLowerCase() && !d.startsWith(this.selectedState));
-
-                    let finalOptionsSet = new Set([capital]);
-                    let shuffledDistractors = this.shuffleArray(distractors);
-
-                    for (let i = 0; finalOptionsSet.size < 4 && i < shuffledDistractors.length; ++i) {
-                        if (!Array.from(finalOptionsSet).map(o => o.toLowerCase()).includes(shuffledDistractors[i].toLowerCase())) {
-                            finalOptionsSet.add(shuffledDistractors[i]);
-                        }
-                    }
-                    let fallbackCounter = 0;
-                    const allCapitals = Object.values(this.stateData.capitals || {});
-                    while (finalOptionsSet.size < 4 && fallbackCounter < allCapitals.length) {
-                        const randomCapital = allCapitals[Math.floor(Math.random() * allCapitals.length)];
-                        if (randomCapital.toLowerCase() !== capital.toLowerCase() && !Array.from(finalOptionsSet).map(o => o.toLowerCase()).includes(randomCapital.toLowerCase())) {
-                            finalOptionsSet.add(randomCapital);
-                        }
-                        fallbackCounter++;
-                    }
-                    if (finalOptionsSet.size < 4) {
-                        const placeholders = ["City Example A", "City Example B", "City Example C", "City Example D"];
-                        let phIndex = 0;
-                        while (finalOptionsSet.size < 4) {
-                            if (!Array.from(finalOptionsSet).map(o => o.toLowerCase()).includes(placeholders[phIndex].toLowerCase())) {
-                                finalOptionsSet.add(placeholders[phIndex]);
-                            }
-                            phIndex = (phIndex + 1) % placeholders.length;
-                        }
-                    }
-                    processedInstance.options = this.shuffleArray(Array.from(finalOptionsSet));
-                    processedInstance.correctAnswer = capital;
-                } else {
-                    processedInstance.options = ["Capital data not found.", "Option B", "Option C", "Option D"];
-                    processedInstance.correctAnswer = "Capital data not found.";
-                }
-            }
-        }
-        return processedInstance;
-    }
-
-    // --- Méthodes du Minuteur ---
     startQuestionTimer() {
         if (this.currentMode !== 'exam') {
             this.updateTimerDisplay(false);
@@ -663,7 +850,6 @@ class QuizApp {
 
         if (recordTime && this.currentMode === 'exam' && this.currentQuestionIndex < this.selectedQuestions.length) {
             let timeTaken = this.questionTimeLimit - Math.max(0, this.questionTimeRemaining);
-            // MODIFICATION ICI: Si une réponse a été donnée et que le temps calculé est 0, enregistrer au moins 1 seconde.
             if (this.userAnswers[this.currentQuestionIndex] !== null && timeTaken === 0) { 
                 timeTaken = 1; 
             }
@@ -675,7 +861,7 @@ class QuizApp {
         const timerDisplay = document.getElementById('questionTimerDisplay');
         if (timerDisplay) {
             if (show && this.currentMode === 'exam') {
-                timerDisplay.textContent = `Temps: ${time}s`;
+                timerDisplay.textContent = `Time: ${time}s`;
                 timerDisplay.style.display = 'inline-block';
                 if (time <= 5 && time > 0) { 
                     timerDisplay.classList.add('low-time');
@@ -688,10 +874,10 @@ class QuizApp {
             }
         }
     }
-
+    
     handleTimeUp() {
         this.stopQuestionTimer(true); 
-        console.log("Temps écoulé pour la question: " + (this.currentQuestionIndex + 1));
+        console.log("Time up for question: " + (this.currentQuestionIndex + 1));
     
         const currentDisplayQuestion = this.processStateSpecificQuestion(this.selectedQuestions[this.currentQuestionIndex]);
         const explanationDiv = document.getElementById('explanation');
@@ -705,17 +891,16 @@ class QuizApp {
         });
     
         if (explanationDiv && explanationContent && this.userAnswers[this.currentQuestionIndex] === null) {
-            explanationContent.innerHTML = `<p class='text-accent'><strong>Temps écoulé !</strong> La bonne réponse était marquée.</p> ${currentDisplayQuestion.explanation || "Aucune explication disponible."}`;
+            explanationContent.innerHTML = `<p class='text-accent'><strong>Time's up!</strong> The correct answer was marked.</p> ${currentDisplayQuestion.explanation || "No explanation available."}`;
             explanationDiv.style.display = 'block';
         }
     
         document.getElementById('nextButton').disabled = false; 
+        this.focusElement(document.getElementById('nextButton')); // Focus pour faciliter la navigation
     
-        setTimeout(() => {
-            this.nextQuestion(); 
-        }, 2500); 
+        // En mode examen, ne pas avancer automatiquement, laisser l'utilisateur cliquer sur Next
+        // Sauf si vous voulez une pénalité de temps ou autre chose
     }
-    
 
     displayQuestion() {
         const originalQuestionData = this.selectedQuestions[this.currentQuestionIndex];
@@ -747,7 +932,7 @@ class QuizApp {
                 </div>
                 <div class="controls">
                     <button id="prevButton" class="btn btn-secondary" ${this.currentQuestionIndex === 0 || this.currentMode === 'exam' ? 'disabled' : ''}>Previous</button> 
-                    <button id="nextButton" class="btn btn-primary" ${this.userAnswers[this.currentQuestionIndex] === null && this.currentMode === 'exam' && this.selectedQuestions.length > 0 ? 'disabled' : ''}>
+                    <button id="nextButton" class="btn btn-primary" ${this.userAnswers[this.currentQuestionIndex] === null && this.currentMode === 'exam' && this.questionTimeRemaining > 0 ? 'disabled' : ''}>
                         ${this.currentQuestionIndex === this.selectedQuestions.length - 1 ? (this.currentMode === 'exam' ? 'View Results' : 'Finish Quiz') : 'Next'}
                     </button>
                 </div>
@@ -762,7 +947,14 @@ class QuizApp {
                 this.focusElement(this.elements.activeQuestionContainer.querySelector('.answer-option'));
             }
         }
-        this.startQuestionTimer(); 
+        if (this.currentMode === 'exam' && this.userAnswers[this.currentQuestionIndex] === null) { // Démarrer le minuteur uniquement si la question n'a pas été répondue
+             this.startQuestionTimer();
+        } else if (this.currentMode === 'exam' && this.userAnswers[this.currentQuestionIndex] !== null) {
+            // Si la réponse est déjà là (restauration), afficher le temps mais ne pas redémarrer le minuteur.
+            this.updateTimerDisplay(true, Math.max(0, this.questionTimeLimit - (this.timeSpentPerQuestion[this.currentQuestionIndex] || 0)));
+        } else {
+             this.updateTimerDisplay(false); // Cacher le minuteur en mode pratique
+        }
     }
 
     getDifficultyBadge(difficulty) {
@@ -790,10 +982,10 @@ class QuizApp {
         document.getElementById('prevButton')?.addEventListener('click', () => this.previousQuestion());
         document.getElementById('nextButton')?.addEventListener('click', () => this.nextQuestion());
     }
-
+    
     restoreAnswerState(currentDisplayQuestion) {
         const userAnswerIndex = this.userAnswers[this.currentQuestionIndex];
-        if (userAnswerIndex === null) return;
+        if (userAnswerIndex === null || userAnswerIndex === undefined) return;
 
         const answerButtons = document.querySelectorAll('.answer-option');
         answerButtons.forEach((btn, i) => {
@@ -830,11 +1022,11 @@ class QuizApp {
     }
 
     selectAnswer(selectedIndex, currentDisplayQuestion) {
-        if(this.userAnswers[this.currentQuestionIndex] !== null && this.currentMode === 'exam') { 
-            return;
+        if(this.userAnswers[this.currentQuestionIndex] !== null && this.currentMode === 'exam' && this.questionTimeRemaining > 0) { 
+            return; // Ne pas permettre de changer de réponse en mode examen une fois sélectionnée (si le temps n'est pas écoulé)
         }
 
-        if (this.currentMode === 'exam' && this.questionTimerInterval) {
+        if (this.currentMode === 'exam' && this.questionTimerInterval) { // Arrêter le minuteur dès qu'une réponse est sélectionnée
             this.stopQuestionTimer(true);
         }
         this.userAnswers[this.currentQuestionIndex] = selectedIndex;
@@ -842,19 +1034,19 @@ class QuizApp {
         document.querySelectorAll('.answer-option').forEach((btn, i) => {
             btn.setAttribute('aria-checked', String(i === selectedIndex));
             btn.classList.toggle('selected', i === selectedIndex);
-            btn.disabled = true; 
+            btn.disabled = true; // Désactiver les options après sélection
         });
 
         const nextButton = document.getElementById('nextButton');
-        if (nextButton) nextButton.disabled = false;
+        if (nextButton) nextButton.disabled = false; // Activer le bouton Suivant
 
-        if (this.currentMode !== 'exam') { 
+        if (this.currentMode !== 'exam') { // Mode Pratique: afficher correction et explication
             const selectedOptionText = currentDisplayQuestion.options[selectedIndex];
             const isCorrect = this._isCorrectAnswer(selectedOptionText, currentDisplayQuestion.correctAnswer);
 
             document.querySelectorAll('.answer-option')[selectedIndex]?.classList.add(isCorrect ? 'correct' : 'incorrect');
 
-            currentDisplayQuestion.options.forEach((opt, i) => {
+            currentDisplayQuestion.options.forEach((opt, i) => { // Marquer la/les bonne(s) réponse(s)
                 if (this._isCorrectAnswer(opt, currentDisplayQuestion.correctAnswer)) {
                     document.querySelectorAll('.answer-option')[i]?.classList.add('correct');
                 }
@@ -872,7 +1064,7 @@ class QuizApp {
                 this.score++;
                 this.correctlyAnsweredFlags[this.currentQuestionIndex] = true;
             } else if (!isCorrect && alreadyCountedAsCorrect) { 
-                this.score--;
+                this.score--; // Si l'utilisateur change une réponse correcte pour une incorrecte
                 this.correctlyAnsweredFlags[this.currentQuestionIndex] = false;
             }
             this.updateProgress();
@@ -880,7 +1072,7 @@ class QuizApp {
         this.saveQuizState();
         if (nextButton) this.focusElement(nextButton);
     }
-
+    
     updateProgress() {
         this.elements.currentQuestionStat.textContent = this.currentQuestionIndex + 1;
         this.elements.currentScoreStat.textContent = this.currentMode === 'exam' ? "N/A" : this.score;
@@ -896,19 +1088,25 @@ class QuizApp {
     }
 
     nextQuestion() {
-        if (this.userAnswers[this.currentQuestionIndex] === null && this.currentMode === 'exam' && !this.questionTimerInterval && this.questionTimeRemaining > 0) {
-            alert("Please select an answer before proceeding.");
-            return;
+        // Si l'utilisateur n'a pas répondu et que le temps n'est pas écoulé en mode examen, ne pas avancer.
+        if (this.currentMode === 'exam' && this.userAnswers[this.currentQuestionIndex] === null && this.questionTimeRemaining > 0) {
+            // Optionnel: alerter l'utilisateur ou simplement ne rien faire.
+            // Pour l'instant, le bouton 'Next' est désactivé dans ce cas, donc ce `if` ne devrait pas être souvent atteint.
+            // Cependant, si `handleTimeUp` appelle `nextQuestion`, ce serait un cas à gérer.
+             console.log("User clicked Next in exam mode without answering, and time is not up. (This path should be rare if 'Next' button logic is correct).");
+             return;
         }
-        if (this.questionTimerInterval) {
+        
+        if (this.questionTimerInterval) { // Arrête le minuteur s'il est actif (au cas où handleTimeUp n'aurait pas été appelé)
             this.stopQuestionTimer(true);
         }
+
         if (this.currentQuestionIndex < this.selectedQuestions.length - 1) {
             this.currentQuestionIndex++;
             this.displayQuestion(); 
             this.saveQuizState();
         } else {
-            this.clearSavedQuizState();
+            this.clearSavedQuizState(); // Effacer l'état sauvegardé car le quiz est terminé
             if (this.currentMode === 'exam') {
                 this.calculateExamScoreAndShowResults();
             } else {
@@ -917,12 +1115,12 @@ class QuizApp {
         }
     }
     
-
     calculateExamScoreAndShowResults() {
         this.score = 0;
         this.correctlyAnsweredFlags = new Array(this.selectedQuestions.length).fill(false);
         this.selectedQuestions.forEach((originalQuestionData, index) => {
             const userAnswerIndex = this.userAnswers[index];
+            // Utiliser la question telle qu'elle a été VUE par l'utilisateur (traitée)
             const questionUserSaw = this.processStateSpecificQuestion(JSON.parse(JSON.stringify(originalQuestionData)));
 
             if (userAnswerIndex !== null && userAnswerIndex !== undefined && questionUserSaw.options && userAnswerIndex < questionUserSaw.options.length) {
@@ -932,6 +1130,7 @@ class QuizApp {
                     this.correctlyAnsweredFlags[index] = true;
                 }
             }
+            // Si userAnswerIndex est null (temps écoulé), la réponse est incorrecte, score non incrémenté.
         });
         this.showResults();
     }
@@ -941,17 +1140,21 @@ class QuizApp {
             const questionUserSaw = this.processStateSpecificQuestion(JSON.parse(JSON.stringify(originalQuestionData)));
             const userAnswerIndex = this.userAnswers[index];
             const isCorrect = this.correctlyAnsweredFlags[index];
-            let userAnswerText = "No answer";
+            let userAnswerText = "No answer"; // Par défaut
             if (userAnswerIndex !== null && userAnswerIndex !== undefined && questionUserSaw.options && userAnswerIndex < questionUserSaw.options.length) {
                 userAnswerText = questionUserSaw.options[userAnswerIndex];
+            } else if (this.currentMode === 'exam' && (this.timeSpentPerQuestion[index] || 0) >= this.questionTimeLimit) {
+                userAnswerText = "Time Expired / No Answer";
             }
-            let correctAnswerForDisplay = originalQuestionData.correctAnswer;
+
+
+            let correctAnswerForDisplay = questionUserSaw.correctAnswer; // Utiliser la bonne réponse de la question traitée
             if (Array.isArray(correctAnswerForDisplay)) {
                 correctAnswerForDisplay = correctAnswerForDisplay.join('; or ');
             }
 
             return {
-                questionId: originalQuestionData.id || `q-${index}`,
+                questionId: originalQuestionData.id || `q-${index}`, // Utiliser l'ID original
                 questionText: questionUserSaw.question,
                 options: questionUserSaw.options,
                 userAnswerIndex: userAnswerIndex,
@@ -962,15 +1165,15 @@ class QuizApp {
                 category: originalQuestionData.category || 'N/A',
                 difficulty: originalQuestionData.difficulty || 'N/A',
                 isOfficial: originalQuestionData.isOfficial || false,
-                timeSpent: this.timeSpentPerQuestion[index] !== undefined ? this.timeSpentPerQuestion[index] : (this.currentMode === 'exam' ? this.questionTimeLimit : 0)
+                timeSpent: this.timeSpentPerQuestion[index] !== undefined ? this.timeSpentPerQuestion[index] : (this.currentMode === 'exam' && userAnswerIndex === null ? this.questionTimeLimit : 0)
             };
         });
     }
-
+    
     showResults() {
         this.stopQuestionTimer(false); 
         this.updateTimerDisplay(false); 
-        this.clearSavedQuizState();
+        this.clearSavedQuizState(); // Quiz terminé, plus besoin de l'état de reprise.
         this.showLoading(true, "Finalizing results...");
         this.collectDetailedResults();
         this.showScreen(this.elements.resultsScreen);
@@ -980,7 +1183,7 @@ class QuizApp {
         const percentage = Math.round((finalScoreValue / totalQuestions) * 100);
 
         this.elements.finalScoreDisplay.textContent = percentage + '%';
-        this.elements.finalScoreDisplay.className = 'final-score text-center';
+        this.elements.finalScoreDisplay.className = 'final-score text-center'; // Reset classes
         this.elements.finalScoreDisplay.classList.add(percentage >= 60 ? 'pass' : 'fail');
 
         const messages = {
@@ -998,13 +1201,13 @@ class QuizApp {
             if (result.userAnswerIndex !== null && result.userAnswerIndex !== undefined) {
                 reviewItemMainClass += result.isCorrect ? ' review-item-correct' : ' review-item-incorrect';
             } else {
-                reviewItemMainClass += ' review-item-no-answer';
+                reviewItemMainClass += ' review-item-no-answer'; // Pour les questions non répondues / temps écoulé
             }
 
             let reviewItemHTML = `<div class="${reviewItemMainClass}">
                 <p class="review-question-text"><span class="question-number-review">Question ${index + 1}:</span> ${result.questionText}`;
             if (this.currentMode === 'exam' && result.timeSpent !== undefined) { 
-                 reviewItemHTML += ` <span class="text-muted" style="font-size:0.8em; font-weight:normal;">(Temps: ${this._formatTime(result.timeSpent)})</span>`;
+                 reviewItemHTML += ` <span class="text-muted" style="font-size:0.8em; font-weight:normal;">(Time: ${this._formatTime(result.timeSpent)})</span>`;
             }
             reviewItemHTML += `</p><div class="review-options-container">`;
 
@@ -1025,8 +1228,8 @@ class QuizApp {
                 if (!result.isCorrect) {
                     reviewItemHTML += `<p class="text-accent"><strong>Correct answer(s):</strong> ${result.correctAnswerText}</p>`;
                 }
-            } else {
-                reviewItemHTML += `<p class="text-muted"><strong>Your answer:</strong> ${this.currentMode === 'exam' ? 'Temps écoulé / Pas de réponse' : 'Pas de réponse fournie'}</p>
+            } else { // Cas où aucune réponse n'a été fournie ou temps écoulé
+                reviewItemHTML += `<p class="text-muted"><strong>Your answer:</strong> ${this.currentMode === 'exam' ? 'Time Expired / No Answer' : 'No answer provided'}</p>
                                    <p class="text-accent"><strong>Correct answer(s):</strong> ${result.correctAnswerText}</p>`;
             }
             reviewItemHTML += `<p><em>Explanation:</em> ${result.explanation}</p></div></div>
@@ -1034,7 +1237,7 @@ class QuizApp {
             this.elements.resultsDetailsContainer.innerHTML += reviewItemHTML;
         });
         this.showLoading(false);
-        this.focusElement(this.elements.resultsHeading);
+        this.focusElement(this.elements.resultsHeading || this.elements.finalScoreDisplay);
     }
 
     _formatTime(totalSeconds) { 
@@ -1045,17 +1248,15 @@ class QuizApp {
         }
         return `${seconds}s`;
     };
-
-
+    
     getProgressBarColor(percentage) {
         if (percentage >= 75) return 'var(--color-success)';
         if (percentage >= 50) return 'var(--color-warning)';
         return 'var(--color-error)';
     }
-
+    
     displayDetailedStatistics() {
         if (!this.detailedQuizResults || this.detailedQuizResults.length === 0) {
-            console.error("No detailed results available to display.");
             this.elements.overallStatsContainer.innerHTML = '<p class="text-center text-muted">No statistics available for this quiz attempt.</p>';
             this.elements.categoryStatsContainer.innerHTML = '';
             this.elements.difficultyStatsContainer.innerHTML = '';
@@ -1086,8 +1287,8 @@ class QuizApp {
             const totalTimeSpentSeconds = this.detailedQuizResults.reduce((sum, r) => sum + (r.timeSpent || 0), 0);
             const averageTimePerQuestionSeconds = totalQuestions > 0 ? (totalTimeSpentSeconds / totalQuestions).toFixed(1) : 0;
             overallStatsHTML += `
-                <p class="mt-1"><strong>Temps total du quiz:</strong> <span class="stat-value">${this._formatTime(totalTimeSpentSeconds)}</span></p>
-                <p><strong>Temps moyen par question:</strong> <span class="stat-value">${this._formatTime(parseFloat(averageTimePerQuestionSeconds))}</span></p>
+                <p class="mt-1"><strong>Total quiz time:</strong> <span class="stat-value">${this._formatTime(totalTimeSpentSeconds)}</span></p>
+                <p><strong>Average time per question:</strong> <span class="stat-value">${this._formatTime(parseFloat(averageTimePerQuestionSeconds))}</span></p>
             `;
         }
         this.elements.overallStatsContainer.innerHTML = overallStatsHTML;
@@ -1142,16 +1343,16 @@ class QuizApp {
         this.elements.difficultyStatsContainer.innerHTML = hasDifficultyData ? difficultyHTML : '<p class="text-center text-muted">Difficulty levels were not specified for questions in this quiz.</p>';
 
         const officialQuestions = this.detailedQuizResults.filter(r => r.isOfficial);
-        if (officialQuestions.length > 0) {
-            if (this.elements.officialStatsCard) this.elements.officialStatsCard.style.display = 'block';
+        if (officialQuestions.length > 0 && this.elements.officialStatsCard) {
+             this.elements.officialStatsCard.style.display = 'block';
             const correctOfficial = officialQuestions.filter(r => r.isCorrect).length;
             const percentOfficial = Math.round((correctOfficial / officialQuestions.length) * 100);
             this.elements.officialStatsContainer.innerHTML = `
                 <p><strong>Official Questions:</strong> <span class="stat-value">${correctOfficial}/${officialQuestions.length} (${percentOfficial}%)</span></p>
                 <div class="progress-bar-stat"><div class="progress-fill-stat" style="width: ${percentOfficial}%; background-color: ${this.getProgressBarColor(percentOfficial)};">${percentOfficial > 0 ? percentOfficial + '%' : ''}</div></div>
             `;
-        } else {
-            if (this.elements.officialStatsCard) this.elements.officialStatsCard.style.display = 'none';
+        } else if (this.elements.officialStatsCard) {
+            this.elements.officialStatsCard.style.display = 'none';
         }
 
         const incorrectQuestions = this.detailedQuizResults.filter(r => !r.isCorrect);
@@ -1165,16 +1366,15 @@ class QuizApp {
         if (this.currentMode === 'exam' && this.elements.timeStatsCard && this.elements.timePerQuestionStatsContainer) {
             this.elements.timeStatsCard.style.display = 'block';
             let questionsTimeHTML = '<ul>';
-            this.detailedQuizResults.forEach((result, i) => { // i est l'index ici
+            this.detailedQuizResults.forEach((result, i) => {
                 let timeDisplay = this._formatTime(result.timeSpent || 0);
-                if (result.timeSpent === this.questionTimeLimit && (result.userAnswerIndex === null || result.userAnswerIndex === undefined)) {
-                    timeDisplay += ' <span class="text-accent" style="font-size:0.8em; font-style:italic;">(Limite atteinte)</span>';
+                if (result.timeSpent >= this.questionTimeLimit && (result.userAnswerIndex === null || result.userAnswerIndex === undefined)) {
+                    timeDisplay += ' <span class="text-accent" style="font-size:0.8em; font-style:italic;">(Time limit reached)</span>';
                 }
-                // Affichage du texte complet de la question et de l'attribut title
                 questionsTimeHTML += `
                     <li title="${result.questionText.replace(/"/g, '"')}">
                         <span class="question-stat-number">Question ${i + 1}:</span>
-                        <span class="question-stat-text">${result.questionText}</span>
+                        <span class="question-stat-text">${result.questionText.length > 70 ? result.questionText.substring(0, 67) + '...' : result.questionText}</span>
                         <span class="question-stat-time">${timeDisplay}</span>
                     </li>`;
             });
@@ -1184,7 +1384,6 @@ class QuizApp {
             this.elements.timeStatsCard.style.display = 'none';
         }
 
-
         this.showScreen(this.elements.statisticsScreen);
         this.showLoading(false);
         this.focusElement(this.elements.backToResultsScreenBtn);
@@ -1193,6 +1392,10 @@ class QuizApp {
     restartQuiz() {
         this.clearSavedQuizState();
         let filterFnToRestart = null;
+        // this.allQuestionsData est déjà initialisé avec les questions de base + celles de l'état (si un état a été sélectionné)
+        // au moment où restartQuiz est appelé depuis l'écran des résultats.
+        // Donc, this.selectedCategoryOrFilterKey et titleForRestart devraient refléter le quiz qui vient de se terminer.
+        
         let titleForRestart = this.currentQuizTitle.replace(` (${this.currentMode === 'exam' ? 'Exam' : 'Practice'})`, '');
 
         if (this.currentMode === 'practice' && this.selectedCategoryOrFilterKey.startsWith('Filter')) {
@@ -1206,20 +1409,18 @@ class QuizApp {
             const foundFilter = filters.find(f => f.key === this.selectedCategoryOrFilterKey);
             if (foundFilter) {
                 filterFnToRestart = foundFilter.filterFn;
-                titleForRestart = foundFilter.title;
+                titleForRestart = foundFilter.title; // Utiliser le titre du filtre pour l'affichage
             } else {
-                console.warn("Filter key for restart not found, defaulting to 'Mixed Questions':", this.selectedCategoryOrFilterKey);
-                this.selectedCategoryOrFilterKey = 'all';
-                titleForRestart = 'Mixed Questions';
+                console.warn("Filter key for restart not found, defaulting to previous title's base:", this.selectedCategoryOrFilterKey);
+                // Si le filtre n'est pas trouvé, on pourrait choisir un comportement par défaut ou garder le titre actuel
             }
-        } else if (this.selectedCategoryOrFilterKey === 'all' || (this.currentMode === 'exam' && this.selectedCategoryOrFilterKey === 'all')) {
-            titleForRestart = 'Mixed Questions';
-        } else if (this.currentMode === 'exam') {
-            titleForRestart = this.selectedCategoryOrFilterKey;
-        }
+        } 
+        // Pas besoin de reconstruire allQuestionsData ici, car il devrait déjà être correct pour l'état actuel.
+        // handleCategorySelection va filtrer à partir de ce this.allQuestionsData.
         this.handleCategorySelection(this.selectedCategoryOrFilterKey, titleForRestart, filterFnToRestart);
     }
-}
+
+} // Fin de la classe QuizApp
 
 document.addEventListener('DOMContentLoaded', () => {
     if (!window.quizApp) {

@@ -20,8 +20,10 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇺🇸</text></svg>">
 
     <style>
-        /* Inline styles from your provided HTML for quiz-specific elements */
-        /* These should ideally be in style.css, but keeping them here as per your initial structure */
+        /* Styles CSS de style.css, inclus ici pour la complétude de l'exemple s'ils sont spécifiques à cette page */
+        /* ... (votre CSS existant de style.css peut aller ici ou rester dans le fichier séparé) ... */
+
+        /* Styles spécifiques au quiz (déjà présents dans votre welcome.html initial) */
         .fi {
             font-size: 1.5em;
             vertical-align: middle;
@@ -40,7 +42,7 @@
             border-width: 0;
         }
         .floating-shapes {
-            display: none; /* As per original comment */
+            display: none;
         }
         .loading-screen {
             position: fixed;
@@ -54,14 +56,14 @@
             justify-content: center;
             align-items: center;
             z-index: 10000; 
-            color: var(--color-text-body, #333f50); /* Assumes CSS vars are in style.css */
+            color: var(--color-text-body, #333f50);
         }
         .loading-spinner {
-            border: 5px solid var(--color-bg-alt, #e9edf2); /* Assumes CSS vars */
+            border: 5px solid var(--color-bg-alt, #e9edf2);
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            border-left-color: var(--color-us-blue, #002868); /* Assumes CSS vars */
+            border-left-color: var(--color-us-blue, #002868);
             animation: spin 1s ease-in-out infinite;
             margin-bottom: calc(var(--spacing-unit, 0.25rem) * 4);
         }
@@ -122,10 +124,8 @@
         .quiz-navigation-controls .btn-link:hover {
             color: var(--color-us-red, #BF0A30);
         }
-
-        /* Ensure card elements for statistics have consistent bottom margin if they don't get it from .quiz-section */
         #statisticsScreen .card {
-             margin-bottom: calc(var(--spacing-unit, 0.25rem) * 6); /* Or your standard card margin from style.css */
+             margin-bottom: calc(var(--spacing-unit, 0.25rem) * 6);
         }
         #statisticsScreen .card:last-child {
             margin-bottom: 0;
@@ -133,7 +133,6 @@
     </style>
 </head>
 <body>
-    <!-- Floating shapes div, keep as is or implement if desired -->
     <div class="floating-shapes">
         <div class="shape"></div>
         <div class="shape"></div>
@@ -170,7 +169,6 @@
                 <label for="stateSelect" class="sr-only">State:</label>
                 <select id="stateSelect" aria-describedby="stateSelectorHeading">
                     <option value="">-- Select State --</option>
-                    {/* Options will be populated by quiz-app.js */}
                 </select>
                 <button id="confirmStateBtn" class="btn btn-primary" disabled>Confirm State & Proceed</button>
             </section>
@@ -179,7 +177,6 @@
             <section id="categorySelector" class="quiz-section" style="display: none;" aria-labelledby="categorySelectorHeading">
                 <h3 id="categorySelectorHeading"><span class="icon" aria-hidden="true">🗂️</span> Choose a Category</h3>
                 <div class="category-selection-grid">
-                    {/* Categories will be populated by quiz-app.js */}
                 </div>
             </section>
 
@@ -203,9 +200,7 @@
 
             <!-- Active Quiz Content -->
             <section id="quizContentSection" class="quiz-section" style="display: none;" aria-live="polite">
-                
                 <div id="activeQuestionContainer">
-                    {/* Question and options will be injected by quiz-app.js */}
                 </div>
             </section>
 
@@ -216,7 +211,6 @@
                 <p class="result-message text-center" id="resultMessage">Your feedback message will appear here!</p>
                 
                 <div class="results-details" id="resultsDetailsContainer"> 
-                    {/* Review of answers injected by quiz-app.js */}
                 </div>
                 <div class="controls" style="margin-top: calc(var(--spacing-unit) * 8);">
                     <button id="restartQuizBtn" class="btn btn-primary">Restart Same Selection</button>
@@ -235,7 +229,6 @@
                         <h4><span class="icon" aria-hidden="true">🏆</span> Overall Performance</h4>
                     </div>
                     <div class="card-body" id="overallStatsContainer">
-                        {/* Content injected by quiz-app.js */}
                     </div>
                 </div>
 
@@ -244,7 +237,6 @@
                         <h4><span class="icon" aria-hidden="true">📚</span> Performance by Category</h4>
                     </div>
                     <div class="card-body" id="categoryStatsContainer">
-                        {/* Content injected by quiz-app.js */}
                     </div>
                 </div>
 
@@ -253,7 +245,6 @@
                         <h4><span class="icon" aria-hidden="true">📶</span> Performance by Difficulty</h4>
                     </div>
                     <div class="card-body" id="difficultyStatsContainer">
-                        {/* Content injected by quiz-app.js */}
                     </div>
                 </div>
                 
@@ -262,7 +253,6 @@
                         <h4><span class="icon" aria-hidden="true">🏛️</span> Performance on Official Questions</h4>
                     </div>
                     <div class="card-body" id="officialStatsContainer">
-                        {/* Content injected by quiz-app.js */}
                     </div>
                 </div>
 
@@ -271,12 +261,10 @@
                         <h4><span class="icon" aria-hidden="true">⏱️</span> Time per Question</h4>
                     </div>
                     <div class="card-body" id="timePerQuestionStatsContainer">
-                        {/* Content injected by quiz-app.js */}
                     </div>
                 </div>
 
                 <div id="incorrectReviewContainer" class="mt-1">
-                     {/* Content injected by quiz-app.js (summary/link to full review) */}
                 </div>
 
                 <div class="controls" style="margin-top: calc(var(--spacing-unit) * 8);">
@@ -285,12 +273,10 @@
                 </div>
             </section>
             
-            <!-- Loading Screen Overlay -->
             <div id="loadingScreen" style="display: none;"> 
                 <div class="loading-spinner"></div>
                 <p>Loading questions...</p>
             </div>
-
         </main> 
     </div> 
 
@@ -300,6 +286,7 @@
     </footer>
 
     <!-- Scripts for Quiz Functionality -->
+    <script src="congress.js"></script> <!-- VOTRE FICHIER DE DONNÉES DU CONGRÈS -->
     <script src="questions.js"></script>
     <script src="quiz-app.js"></script>
 </body>

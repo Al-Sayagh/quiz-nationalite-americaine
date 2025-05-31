@@ -1,4 +1,4 @@
-[
+var congressMembers = [
   {
     "id": 1,
     "name": "Maria Cantwell",
